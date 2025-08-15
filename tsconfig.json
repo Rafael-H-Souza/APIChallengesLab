@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    
+    "rootDir": ".",
+    "outDir": "./dist",
+
+    "module": "commonjs",
+    "target": "es2020",
+    "lib": ["es2020"],
+    "types": ["node", "jest"],
+    "experimentalDecorators": true, 
+    "emitDecoratorMetadata": true, 
+
+    "sourceMap": false,
+    "declaration": false,
+    "declarationMap": false,
+
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "skipLibCheck": true,
+
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node"
+  },
+
+  "include": ["src/**/*", "tests"],
+  "exclude": ["node_modules", "dist"]
+}
