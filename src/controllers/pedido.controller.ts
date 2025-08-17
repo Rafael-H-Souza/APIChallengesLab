@@ -17,7 +17,7 @@ export class PedidoController {
     }
   };
 
-  public getAll = async (_req: Request, res: Response): Promise<Response> => {
+  public getAll = async  (req: Request, res: Response) : Promise<Response> => {
     try {
       const pedidos = await this.service.getAll();
       return res.json(pedidos);

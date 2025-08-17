@@ -1,49 +1,43 @@
-import express, { Application } from "express";
-import mongoose from "mongoose";
-import { PedidoRoutes } from "./routes/pedido.routes";
-import { ErrorMiddleware } from "./middlewares/error.middleware";
 
-class App {
+import express, { Application } from 'express';
+import swaggerUi from 'swagger-ui-express';
+import swaggerDocument from './swagger/swagger.json';
+import bodyParser from 'body-parser';
+
+import { PedidoRoutes } from './routes/pedido.routes';
+//import {  } from './routes/upload.routes';
+
+export class Server {
   public app: Application;
-  private pedidoRoutes: PedidoRoutes;
+  private port: number;
 
-  constructor() {
+  constructor(port: number = 3000) {
     this.app = express();
-    this.pedidoRoutes = new PedidoRoutes();
-
-    this.initializeMiddlewares();
-    this.initializeRoutes();
-    this.initializeErrorHandling();
-    this.connectDatabase();
+    this.port = port;
+    this.config();
+    this.routes();
   }
 
-  private initializeMiddlewares() {
-    this.app.use(express.json());
+  private config(): void {
+    this.app.use(bodyParser.json());
+    this.app.use(bodyParser.urlencoded({ extended: true }));
+
+    this.app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
   }
 
-  private initializeRoutes() {
-    this.app.use("/pedidos", this.pedidoRoutes.router);
+  private routes(): void {
+    this.app.use("/pedidos", PedidoRoutes.getRouter());
+    //this.app.use('/uploads', UploadRouter);
   }
 
-  private initializeErrorHandling() {
-    this.app.use(ErrorMiddleware.handle);
-  }
-
-  private async connectDatabase() {
-    try {
-      await mongoose.connect("mongodb://localhost:27017/test");
-      console.log("MongoDB conectado 🚀");
-    } catch (error) {
-      console.error("Erro ao conectar no MongoDB", error);
-    }
-  }
-
-  public listen() {
-    this.app.listen(3000, () => {
-      console.log("Servidor rodando em http://localhost:3000");
+  public start(): void {
+    this.app.listen(this.port, () => {
+      console.log(`Servidor rodando na porta ${this.port}`);
+      console.log(`Swagger disponível em http://localhost:${this.port}/api-docs`);
     });
   }
 }
 
-const server = new App();
-server.listen();
+// Inicializar servidor
+const server = new Server();
+server.start();
