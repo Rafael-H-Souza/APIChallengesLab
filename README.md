@@ -51,24 +51,6 @@ As principais funcionalidades incluem:
 
 ---
 
-## - Visão Inicial da Aplicação
-```mermaid
-flowchart TD
-    A[Cliente] -->|Upload de Arquivo .txt| B[API REST]
-    B --> C[Processador de Arquivo]
-    C --> D[Validação e Parsing]
-    D --> E[Conversão para JSON]
-    E --> F[MongoDB - Armazenamento]
-    F --> G[Consulta de Dados]
-    G -->|Resposta JSON| A
-
-
-# API Logística — Processamento de Pedidos via TXT (Node.js + TypeScript)
-
-> **Objetivo:** Receber um arquivo **desnormalizado** (formato `.txt`) de um sistema legado, processar e **converter para JSON normalizado**, persistir em **MongoDB** e expor **consultas REST** com filtros (ID do pedido, intervalo de datas, etc.).
-
----
-
 ## Sumário
 
 * [Arquitetura em alto nível](#arquitetura-em-alto-nível)
@@ -645,3 +627,9 @@ Defina a licença do projeto (ex.: MIT) no arquivo `LICENSE`.
 * **Abrir Swagger UI**: `http://localhost:3000/api-docs`
 * **Abrir cobertura**: `coverage/lcov-report/index.html`
 * **Arquivos de exemplo**: `desafio-tecnico-docs/data_1.txt`, `data_2.txt`
+
+---
+
+> **Objetivo:** Receber um arquivo **desnormalizado** (formato `.txt`) de um sistema legado, processar e **converter para JSON normalizado**, persistir em **MongoDB** e expor **consultas REST** com filtros (ID do pedido, intervalo de datas, etc.).
+
+---
