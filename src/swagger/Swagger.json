@@ -15,9 +15,7 @@
       "description": "Produção"
     }
   ],
-  "security": [
-    { "BearerAuth": [] }
-  ],
+  "security": [{ "BearerAuth": [] }],
   "tags": [
     { "name": "Users", "description": "Registro e gerenciamento de usuários" },
     { "name": "Pedidos", "description": "CRUD e consultas de pedidos" },
@@ -62,7 +60,7 @@
         }
       }
     },
-    "/api/user/login": {
+    "/user/login": {
       "post": {
         "tags": ["Users"],
         "summary": "Login de usuário",
@@ -97,7 +95,7 @@
         }
       }
     },
-    "/api/user/user": {
+    "/user/users": {
       "get": {
         "tags": ["Users"],
         "summary": "Obter a lista de usuários",
@@ -133,17 +131,44 @@
           { "$ref": "#/components/parameters/limit" },
           { "$ref": "#/components/parameters/sort" },
           { "$ref": "#/components/parameters/order" },
-          { "name": "clienteId", "in": "query", "schema": { "type": "string" } },
-          { "name": "status", "in": "query", "schema": { "$ref": "#/components/schemas/PedidoStatus" } },
-          { "name": "dataInicio", "in": "query", "schema": { "type": "string", "format": "date-time" } },
-          { "name": "dataFim", "in": "query", "schema": { "type": "string", "format": "date-time" } },
-          { "name": "busca", "in": "query", "schema": { "type": "string" } }
+          {
+            "name": "id",
+            "in": "query",
+            "description": "Filtrar pelo identificador do pedido. Retorna objetos com a propriedade 'id'.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "idPedido",
+            "in": "query",
+            "description": "Filtrar pelo identificador do pedido retornando a propriedade 'idPedido' no corpo.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "dataInicio",
+            "in": "query",
+            "description": "Data inicial do intervalo (formato ISO 8601)",
+            "schema": { "type": "string", "format": "date" }
+          },
+          {
+            "name": "dataFim",
+            "in": "query",
+            "description": "Data final do intervalo (formato ISO 8601)",
+            "schema": { "type": "string", "format": "date" }
+          }
         ],
         "responses": {
           "200": {
-            "description": "Lista paginada de pedidos",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PedidoPage" } } }
-          }
+            "description": "Lista de pedidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Pedido" }
+                }
+              }
+            }
+          },
+          "400": { "description": "Erro nos parâmetros de consulta" }
         }
       },
       "post": {
@@ -156,8 +181,76 @@
           }
         },
         "responses": {
-          "201": { "description": "Pedido criado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Pedido" } } } },
-          "400": { "description": "Erro de validação", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+          "201": {
+            "description": "Pedido criado",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Pedido" } } }
+          },
+          "400": {
+            "description": "Erro de validação",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          }
+        }
+      }
+    },
+    "/pedidos/{id}": {
+      "get": {
+        "tags": ["Pedidos"],
+        "summary": "Obter pedido pelo ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pedido encontrado",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Pedido" } } }
+          },
+          "404": { "description": "Pedido não encontrado" }
+        }
+      },
+      "put": {
+        "tags": ["Pedidos"],
+        "summary": "Atualizar pedido",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/PedidoUpdate" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Pedido atualizado",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Pedido" } } }
+          },
+          "404": { "description": "Pedido não encontrado" }
+        }
+      },
+      "delete": {
+        "tags": ["Pedidos"],
+        "summary": "Remover pedido",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Pedido removido com sucesso" },
+          "404": { "description": "Pedido não encontrado" }
         }
       }
     },
@@ -180,8 +273,21 @@
           }
         },
         "responses": {
-          "201": { "description": "Job de processamento criado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UploadJobCreated" } } } },
-          "400": { "description": "Requisição inválida", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+          "201": {
+            "description": "Arquivo processado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string" },
+                    "data": { "type": "object" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Requisição inválida" }
         }
       }
     }
@@ -199,7 +305,62 @@
       "page": { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
       "limit": { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } },
       "sort": { "name": "sort", "in": "query", "schema": { "type": "string" } },
-      "order": { "name": "order", "in": "query", "schema": { "type": "string", "enum": ["asc", "desc"], "default": "desc" } }
+      "order": {
+        "name": "order",
+        "in": "query",
+        "schema": { "type": "string", "enum": ["asc", "desc"], "default": "desc" }
+      }
+    },
+    "schemas": {
+      "Pedido": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "dataCompra": { "type": "string", "format": "date" }
+        },
+        "required": ["id", "dataCompra"]
+      },
+      "PedidoCreate": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "dataCompra": { "type": "string", "format": "date" }
+        },
+        "required": ["id", "dataCompra"]
+      },
+      "PedidoUpdate": {
+        "type": "object",
+        "properties": {
+          "dataCompra": { "type": "string", "format": "date" }
+        }
+      },
+      "PedidoPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Pedido" }
+          },
+          "total": { "type": "integer" },
+          "page": { "type": "integer" },
+          "limit": { "type": "integer" }
+        }
+      },
+      "UploadJobCreated": {
+        "type": "object",
+        "properties": {
+          "message": { "type": "string" },
+          "data": { "type": "object" }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": { "message": { "type": "string" } }
+      },
+      "PedidoStatus": {
+        "type": "string",
+        "enum": ["ABERTO", "FECHADO", "CANCELADO"]
+      }
     }
   }
 }

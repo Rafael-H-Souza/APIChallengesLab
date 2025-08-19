@@ -3,31 +3,21 @@ import fs from "fs";
 import path from "path";
 import { PedidoService } from "../services/pedido.service";
 
+
 export class UploadController {
-  private pedidoService: PedidoService;
+  private service = new PedidoService();
 
-  constructor() {
-    this.pedidoService = new PedidoService();
-  }
-
-  public uploadFile = async (req: Request, res: Response): Promise<Response> => {
+  upload = async (req: Request, res: Response) => {
     try {
-      if (!req.file) {
-        return res.status(400).json({ message: "Arquivo não enviado" });
-      }
+      const filePath = (req as any).file?.path || req.body.filePath;
+      if (!filePath) return res.status(400).json({ message: "Arquivo não enviado." });
 
-      const filePath = path.join(__dirname, "../../uploads", req.file.filename);
+      const user_register = (req as any).user?.email || "system";
+      const result = await this.service.processFile(filePath, { user_register });
 
-      const grouped = await this.pedidoService.processFile(filePath);
-
-      return res.json({ 
-        message: "Arquivo processado com sucesso", 
-        data: grouped 
-      });
-    } catch (error: any) {
-      return res.status(500).json({ message: error.message });
+      res.status(201).json({ message: "Upload processado e salvo.", ...result });
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
     }
   };
 }
-
-  

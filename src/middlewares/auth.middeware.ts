@@ -1,42 +1,50 @@
 import { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
+import dotenv from "dotenv";
 
-const secretKey = "teste@PI"; // ideal usar process.env.SECRET_KEY
+dotenv.config();
 
+
+const secretKey = process.env.SECRET_KEY as string;
 
 declare module "express-serve-static-core" {
   interface Request {
-    user?: string | JwtPayload; 
+    user?: string | JwtPayload;
   }
 }
 
-export function authenticateToken(req: Request, res: Response, next: NextFunction) {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
 
-  if (!token) {
-    return res.status(403).json({ erro: "Token ausente." });
-  }
+export function authenticateToken(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const authHeader = req.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1]; // Bearer TOKEN
 
-  jwt.verify(
-    token,
-    secretKey,
-    (err: jwt.VerifyErrors | null, user: string | JwtPayload | undefined) => {
-      if (err || !user) {
-        return res
-          .status(403)
-          .json({ erro: "Token inválido ou malformado." });
-      }
-
-      req.user = user; 
-      next();
+    if (!token) {
+      return res.status(403).json({ erro: "Token ausente." });
     }
-  );
+
+   
+    jwt.verify(
+      token,
+      secretKey,
+      (err: jwt.VerifyErrors | null, user: string | JwtPayload | undefined) => {
+        if (err || !user) {
+          return res
+            .status(403)
+            .json({ erro: "Token inválido ou malformado." });
+        }
+
+        req.user = user; 
+        next(); 
+      }
+    );
+  } catch (error) {
+    console.error(" Erro no middleware de autenticação:", error);
+    return res.status(500).json({ erro: "Erro interno na autenticação." });
+  }
 }
-
-
-// const authenticateToken = require("./middlewares/authenticateToken");
-
-// app.get("/pedidos", authenticateToken, (req, res) => {
-//   res.json({ mensagem: "Acesso permitido!", usuario: req.user });
-// });
+``

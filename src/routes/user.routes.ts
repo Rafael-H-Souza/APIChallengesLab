@@ -13,7 +13,6 @@ export class UserRouter {
   }
 
   private initializeRoutes(): void {
-    console.log("teste")
     this.router.post("/register", this.userController.register.bind(this.userController));
     this.router.post("/login", this.userController.login.bind(this.userController));
     this.router.put("/updatePassword",authenticateToken,this.userController.updatePassword.bind(this.userController));

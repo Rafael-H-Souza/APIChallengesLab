@@ -1,9 +1,9 @@
-import express, { Application } from 'express';
-import swaggerUi from 'swagger-ui-express';
-import swaggerDocument from './swagger/swagger.json';
-import bodyParser from 'body-parser';
+import express, { Application } from "express";
+import swaggerUi from "swagger-ui-express";
+import swaggerDocument from "./swagger/swagger.json";
+import bodyParser from "body-parser";
 
-import { PedidoRoutes } from './routes/pedido.routes';
+import { PedidoRoutes } from "./routes/pedido.routes";
 import { UploadRoutes } from "./routes/upload.routes";
 import { UserRouter } from "./routes/user.routes";
 
@@ -12,16 +12,23 @@ export class App {
 
   constructor() {
     this.app = express();
+    this.middlewares();
     this.config();
     this.routes();
+    this.start();
   }
-  
+
   private config(): void {
     this.app.use(bodyParser.json());
-    this.app.use(bodyParser.urlencoded({ extended: true }));    
+    this.app.use(bodyParser.urlencoded({ extended: true }));
   }
-  public start():void{
-     this.app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+  private start(): void {
+    this.app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+  }
+
+  private middlewares() {
+    this.app.use(express.json());
   }
 
   private routes(): void {
@@ -32,4 +39,3 @@ export class App {
 }
 
 export default new App().app;
-

@@ -1,51 +1,35 @@
-// import { config } from "dotenv";
-// import { UserController } from "../../src/controllers/user.controller";
-// import { MongoClient, Db } from "mongodb";
+import request from "supertest";
+import { App } from "../../src/app";
+
+const app = new App();
 
 
-// config();
+describe("PedidoController - Integration", () => {
+  it("Deve retornar todos os pedidos (GET /pedidos)", async () => {
+    const res = await request(app).get("/pedidos");
+    
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+  });
 
-// describe("UserController Integration Tests", () => {
-//   jest.setTimeout(30000); 
+  it("Deve retornar um pedido pelo ID (GET /pedidos?idPedido=123)", async () => {
+    const res = await request(app).get("/pedidos?idPedido=123");
+    
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+    expect(res.body[0]).toHaveProperty("idPedido", "123");
+  });
 
-//   let controller: UserController;
-//   let client: MongoClient;
-//   let db: Db;
+  it("Deve retornar pedidos dentro de um intervalo de datas (GET /pedidos?dataInicio=2025-08-01&dataFim=2025-08-19)", async () => {
+    const res = await request(app).get("/pedidos?dataInicio=2025-08-01&dataFim=2025-08-19");
 
-//   beforeAll(async () => {
-//     controller = new UserController();
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
 
-//     const mongoUri = process.env.MONGO_URI || "mongodb://localhost:27017";
-//     const dbName = process.env.MONGO_DB || "logs_db";
-
-//     client = new MongoClient(mongoUri);
-//     await client.connect();
-//     db = client.db(dbName);
-//   });
-
-//   afterAll(async () => {
-//     if (db) await db.collection("method_logs").deleteMany({});
-//     if (client) await client.close();
-//   });
-
-//   it("should log success for valid user", async () => {
-//     const user = await controller.getUser("1");
-//     expect(user).toEqual({ id: "1", name: "Rafael Souza" });
-
-//     const logs = await db.collection("method_logs").find({}).toArray();
-//     expect(logs.length).toBeGreaterThan(0);
-//     expect(logs[0]).toMatchObject({
-//       class: "UserController",
-//       method: "getUser",
-//       error: null
-//     });
-//   });
-
-//   it("should log error for invalid user", async () => {
-//     await expect(controller.getUser("0")).rejects.toThrow("User not found");
-
-//     const logs = await db.collection("method_logs").find({ error: { $ne: null } }).toArray();
-//     expect(logs.length).toBeGreaterThan(0);
-//     expect(logs[0].error).toBe("User not found");
-//   });
-// });
+    res.body.forEach((pedido: any) => {
+      const dataCompra = new Date(pedido.dataCompra);
+      expect(dataCompra >= new Date("2025-08-01")).toBe(true);
+      expect(dataCompra <= new Date("2025-08-19")).toBe(true);
+    });
+  });
+});

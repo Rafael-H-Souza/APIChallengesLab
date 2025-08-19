@@ -6,19 +6,18 @@ import userRepository from "../repositories/user.repository";
 const SECRET_KEY = "51_Pinga"; // ideal usar process.env.SECRET_KEY
 
 export class UserService {
-  // Registrar novo usuário
   public async register(username: string, password: string): Promise<IUser> {
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await userRepository.createUser({username, password: hashedPassword });
     return user;
   }
 
-  // Listar todos os usuários
+
   public async getUsers(): Promise<IUser[]> {
     return userRepository.findAll();
   }
 
-  // Obter usuário por username
+
   public async getUser(username: string): Promise<IUser> {
     const user = await userRepository.findByUserName(username);
 
@@ -29,7 +28,7 @@ export class UserService {
     return user;
   }
 
-  // Login do usuário
+
   public async login(username: string, password: string): Promise<string> {
     const user = await userRepository.findByUserName(username);
 

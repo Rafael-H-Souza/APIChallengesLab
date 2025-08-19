@@ -9,17 +9,14 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const user_repository_1 = __importDefault(require("../repositories/user.repository"));
 const SECRET_KEY = "51_Pinga"; // ideal usar process.env.SECRET_KEY
 class UserService {
-    // Registrar novo usuário
     async register(username, password) {
         const hashedPassword = await bcrypt_1.default.hash(password, 10);
         const user = await user_repository_1.default.createUser({ username, password: hashedPassword });
         return user;
     }
-    // Listar todos os usuários
     async getUsers() {
         return user_repository_1.default.findAll();
     }
-    // Obter usuário por username
     async getUser(username) {
         const user = await user_repository_1.default.findByUserName(username);
         if (!user) {
@@ -27,7 +24,6 @@ class UserService {
         }
         return user;
     }
-    // Login do usuário
     async login(username, password) {
         const user = await user_repository_1.default.findByUserName(username);
         if (!user) {

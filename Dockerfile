@@ -10,7 +10,7 @@ WORKDIR /app
 COPY package*.json ./
 COPY ./src/swagger/ /app/src/swagger
 
-RUN npm install 
+RUN npm install
 COPY . .
 RUN npm run build
 CMD ["dockerize", "-wait", "tcp://db_lab_logistica:27017", "-timeout", "120s", "node", "dist/server.js"]

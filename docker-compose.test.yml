@@ -1,0 +1,30 @@
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: api_logistica:test
+    container_name: api_logistica_test
+    environment:
+      - NODE_ENV=test
+      - MONGO_URI=mongodb://root:rootLab@mongo:27017/db_test?authSource=admin
+    depends_on:
+      mongo:
+        condition: service_healthy
+    command: npm run test
+
+  mongo:
+    image: mongo:latest
+    container_name: mongo_test
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: rootLab
+      MONGO_INITDB_DATABASE: db_test
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "mongodb://root:rootLab@localhost:27017/admin", "--eval", "db.runCommand({ ping: 1 }).ok" ]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+      start_period: 10s

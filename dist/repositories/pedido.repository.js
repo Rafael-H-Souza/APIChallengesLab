@@ -4,22 +4,40 @@ exports.PedidoRepository = void 0;
 const pedido_model_1 = require("../models/pedido.model");
 class PedidoRepository {
     async create(pedido) {
-        return await pedido_model_1.PedidoModel.create(pedido);
+        return pedido_model_1.PedidoModel.updateOne({
+            user_id: pedido.user_id,
+            order_id: pedido.order_id,
+            product_id: pedido.product_id,
+            date: pedido.date,
+        }, { $set: pedido }, { upsert: true });
     }
     async createMany(pedidos) {
-        return await pedido_model_1.PedidoModel.insertMany(pedidos);
+        const ops = pedidos.map((p) => ({
+            updateOne: {
+                filter: {
+                    user_id: p.user_id,
+                    order_id: p.order_id,
+                    product_id: p.product_id,
+                    date: p.date,
+                },
+                update: { $set: p },
+                upsert: true,
+            },
+        }));
+        return pedido_model_1.PedidoModel.bulkWrite(ops);
     }
     async findAll() {
-        return await pedido_model_1.PedidoModel.find();
+        return pedido_model_1.PedidoModel.find({});
     }
     async findById(id) {
-        return await pedido_model_1.PedidoModel.findById(id);
+        return pedido_model_1.PedidoModel.findById(id);
     }
     async update(id, data) {
-        return await pedido_model_1.PedidoModel.findByIdAndUpdate(id, data, { new: true });
+        data.date_update = new Date();
+        return pedido_model_1.PedidoModel.findByIdAndUpdate(id, data, { new: true });
     }
     async delete(id) {
-        return await pedido_model_1.PedidoModel.findByIdAndDelete(id);
+        return pedido_model_1.PedidoModel.findByIdAndDelete(id);
     }
 }
 exports.PedidoRepository = PedidoRepository;

@@ -24,7 +24,7 @@ class PedidoController {
         };
         this.getById = async (req, res) => {
             try {
-                const id = req.params.id; // força string
+                const id = req.params.id;
                 const pedido = await this.service.getById(id);
                 if (!pedido) {
                     return res.status(404).json({ message: "Pedido não encontrado" });

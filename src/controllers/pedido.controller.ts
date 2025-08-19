@@ -28,7 +28,7 @@ export class PedidoController {
 
   public getById = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const id = req.params.id as string; // força string
+      const id = req.params.id as string; 
       const pedido = await this.service.getById(id);
 
       if (!pedido) {

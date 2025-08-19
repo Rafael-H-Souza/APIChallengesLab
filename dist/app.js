@@ -14,15 +14,20 @@ const user_routes_1 = require("./routes/user.routes");
 class App {
     constructor() {
         this.app = (0, express_1.default)();
+        this.middlewares();
         this.config();
         this.routes();
+        this.start();
     }
     config() {
         this.app.use(body_parser_1.default.json());
         this.app.use(body_parser_1.default.urlencoded({ extended: true }));
     }
     start() {
-        this.app.use('/api-docs', swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swagger_json_1.default));
+        this.app.use("/api-docs", swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swagger_json_1.default));
+    }
+    middlewares() {
+        this.app.use(express_1.default.json());
     }
     routes() {
         this.app.use("/pedidos", pedido_routes_1.PedidoRoutes.getRouter());

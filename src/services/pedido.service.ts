@@ -1,6 +1,12 @@
+import fs from "fs";
+import { Types } from "mongoose";
 import { PedidoRepository } from "../repositories/pedido.repository";
 import { IPedido } from "../interfaces/IPedido";
-import fs from "fs";
+
+const toInt = (s: string) => {
+  const n = parseInt(s.trim(), 10);
+  return Number.isFinite(n) ? n : NaN;
+};
 
 export class PedidoService {
   private repository: PedidoRepository;
@@ -8,84 +14,63 @@ export class PedidoService {
   constructor() {
     this.repository = new PedidoRepository();
   }
-  public async processFile(filePath: string) {
-    const data = fs.readFileSync(filePath, "utf-8");
-    const lines = data.split(/\r?\n/).filter(line => line.trim() !== "");
 
-    const pedidos = lines.map(line => {
+  public async processFile(filePath: string, { user_register = "system" } = {}) {
+    const raw = fs.readFileSync(filePath, "utf-8");
+    const lines = raw.split(/\r?\n/).filter((l) => l.trim() !== "");
+
+    const docs: Partial<IPedido>[] = lines.map((line) => {
+      const user_id = toInt(line.slice(0, 10));
+      const name = line.slice(11, 55).trim();
+      const order_id = toInt(line.slice(55, 65));
+      const product_id = toInt(line.slice(65, 75));
+
+      const valueStr = line.slice(77, 87).trim().replace(",", ".");
+      const value = Types.Decimal128.fromString(valueStr || "0");
+
       const rawDate = line.slice(87, 96).trim();
-      const formattedDate = rawDate.length === 8
-        ? `${rawDate.slice(0,4)}-${rawDate.slice(4,6)}-${rawDate.slice(6,8)}`
-        : undefined;
+      const parsedDate =
+        rawDate.length === 8
+          ? new Date(
+              `${rawDate.slice(0, 4)}-${rawDate.slice(4, 6)}-${rawDate.slice(6, 8)}T00:00:00Z`
+            )
+          : undefined;
 
-      return {
-        userId: line.slice(0, 10).trim(),
-        userName: line.slice(11, 55).trim(),
-        orderId: line.slice(55, 65).trim(),
-        prodId: parseFloat(line.slice(65, 75).trim()),
-        value: parseFloat(line.slice(77, 87).trim()),
-        date: formattedDate,
+      const doc: Partial<IPedido> = {
+        user_id,
+        name,
+        order_id,
+        product_id,
+        value,
+        date_register: new Date(),
+        user_register,
+        status: "Ativo",
       };
+
+      if (parsedDate) {
+        doc.date = parsedDate;
+      }
+
+      return doc;
     });
 
-    
-    const grouped = pedidos.reduce((acc: any[], curr) => {
-      let user = acc.find(u => u.user_id === parseInt(curr.userId, 10));
-      if (!user) {
-        user = {
-          user_id: parseInt(curr.userId, 10),
-          name: curr.userName,
-          orders: []
-        };
-        acc.push(user);
-      }
+    const valid = docs.filter(
+      (d) =>
+        Number.isFinite(d.user_id as number) &&
+        Number.isFinite(d.order_id as number) &&
+        Number.isFinite(d.product_id as number) &&
+        d.value instanceof Types.Decimal128 &&
+        !!d.name &&
+        d.date instanceof Date
+    );
 
-      let order = user.orders.find((o: any) => o.order_id === parseInt(curr.orderId, 10));
-      if (!order) {
-        order = {
-          order_id: parseInt(curr.orderId, 10),
-          total: "0.00",
-          date: curr.date,
-          products: []
-        };
-        user.orders.push(order);
-      }
+    const saveResult = await this.repository.addMany(valid);
 
-      order.products.push({
-        product_id: curr.prodId,
-        value: curr.value.toFixed(2)
-      });
-
-      order.total = (parseFloat(order.total) + curr.value).toFixed(2);
-
-      return acc;
-    }, []);
-
-    return grouped;
+    return {
+      totalLines: lines.length,
+      parsed: docs.length,
+      valid: valid.length,
+      ...saveResult,
+    };
   }
-
-
-  public async create(pedido: IPedido) {
-    return this.repository.create(pedido);
-  }
-
-  public async getAll() {
-    return this.repository.findAll();
-  }
-
-  public async getById(id: string) {
-    return this.repository.findById(id);
-  }
-
-  public async update(id: string, pedido: Partial<IPedido>) {
-    return this.repository.update(id, pedido);
-  }
-
-  public async delete(id: string) {
-    return this.repository.delete(id);
-  }
-
 }
-
-
-                               

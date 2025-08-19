@@ -1,30 +1,41 @@
-// import { UserController } from "../../src/controllers/user.controller";
+import { UserController } from "../../src/controllers/user.controller";
+import { UserService } from "../../src/services/user.service";
+import { Request, Response } from "express";
 
+describe("UserController - Unit", () => {
+  let userController: UserController;
+  let mockService: Partial<UserService>;
+  let mockReq: Partial<Request>;
+  let mockRes: Partial<Response>;
 
-// jest.mock("../../src/services/logger.service.ts", () => {
-//   return {
-//     LoggerService: {
-//       getInstance: () => ({
-//         logSuccess: jest.fn(),
-//         logError: jest.fn(),
-//       }),
-//     },
-//   };
-// });
+  beforeEach(() => {
+    mockService = {
+      create: jest.fn().mockResolvedValue({ id: "1", name: "Rafael", email: "rafael@email.com" }),
+      getAll: jest.fn().mockResolvedValue([{ id: "1", name: "Rafael" }]),
+    };
 
-// describe("UserController Unit Tests", () => {
-//   let controller: UserController;
+    userController = new UserController(mockService as UserService);
 
-//   beforeEach(() => {
-//     controller = new UserController();
-//   });
+    mockReq = {};
+    mockRes = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
+  });
 
-//   it("should return user object when id is valid", async () => {
-//     const result = await controller.getUser("1");
-//     expect(result).toEqual({ id: "1", name: "Rafael Souza" });
-//   });
+  it("Deve criar um usuário", async () => {
+    mockReq.body = { name: "Rafael", email: "rafael@email.com" };
 
-//   it("should throw error when id is 0", async () => {
-//     await expect(controller.getUser("0")).rejects.toThrow("User not found");
-//   });
-// });
+    await userController.create(mockReq as Request, mockRes as Response);
+
+    expect(mockService.create).toHaveBeenCalledWith(mockReq.body);
+    expect(mockRes.status).toHaveBeenCalledWith(201);
+  });
+
+  it("Deve retornar lista de usuários", async () => {
+    await userController.getAll(mockReq as Request, mockRes as Response);
+
+    expect(mockService.getAll).toHaveBeenCalled();
+    expect(mockRes.json).toHaveBeenCalledWith([{ id: "1", name: "Rafael" }]);
+  });
+});

@@ -1,26 +1,20 @@
-import {Document } from "mongoose"
+import { Document, Types } from "mongoose";
 
-type Status = "Ativo"| "Inativo" | "Erro";
+export type Status = "Ativo" | "Inativo" | "Erro";
 
-export interface IPedido extends Document {
-  use_id: number;
+export interface IPedidoBase {
+  user_id: number;
   name: string;
-  order: number;
-  products: {};
-  total:number;
+  order_id: number;
+  product_id: number;
+  value: Types.Decimal128;
   date: Date;
 
-  date_registe: Date;
-  user_registe: string;
-  date_update: Date;
-  user_update: string;
-  status: Status;
-
+  date_register?: Date;
+  user_register?: string;
+  date_update?: Date;
+  user_update?: string;
+  status?: Status;
 }
 
-// id usuário 10 numérico
-// nome 45 texto
-// id pedido 10 numérico
-// id produto 10 numérico
-// valor do produto 12 decimal
-// data compra 8 numérico ( formato: yyyymmdd )
+export interface IPedido extends Document, IPedidoBase {}
