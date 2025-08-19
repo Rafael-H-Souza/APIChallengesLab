@@ -1,6 +1,7 @@
 import fs from "fs";
 import { Types } from "mongoose";
 import { PedidoRepository } from "../repositories/pedido.repository";
+import { IPedidoService } from "./contracts/pedido.service.contract";
 import { IPedido } from "../interfaces/IPedido";
 
 const toInt = (s: string) => {
@@ -8,12 +9,15 @@ const toInt = (s: string) => {
   return Number.isFinite(n) ? n : NaN;
 };
 
-export class PedidoService {
+export class PedidoService implements IPedidoService {
   private repository: PedidoRepository;
+  constructor() { this.repository = new PedidoRepository(); }
 
-  constructor() {
-    this.repository = new PedidoRepository();
-  }
+  async create(data: Partial<IPedido>) { return this.repository.create(data); }
+  async getAll() { return this.repository.findAll(); }
+  async getById(id: string) { return this.repository.findById(id); }
+  async update(id: string, data: Partial<IPedido>) { return this.repository.update(id, data); }
+  async delete(id: string) { return this.repository.delete(id); }
 
   public async processFile(filePath: string, { user_register = "system" } = {}) {
     const raw = fs.readFileSync(filePath, "utf-8");
@@ -24,16 +28,12 @@ export class PedidoService {
       const name = line.slice(11, 55).trim();
       const order_id = toInt(line.slice(55, 65));
       const product_id = toInt(line.slice(65, 75));
-
       const valueStr = line.slice(77, 87).trim().replace(",", ".");
       const value = Types.Decimal128.fromString(valueStr || "0");
-
       const rawDate = line.slice(87, 96).trim();
       const parsedDate =
         rawDate.length === 8
-          ? new Date(
-              `${rawDate.slice(0, 4)}-${rawDate.slice(4, 6)}-${rawDate.slice(6, 8)}T00:00:00Z`
-            )
+          ? new Date(`${rawDate.slice(0, 4)}-${rawDate.slice(4, 6)}-${rawDate.slice(6, 8)}T00:00:00Z`)
           : undefined;
 
       const doc: Partial<IPedido> = {
@@ -46,11 +46,7 @@ export class PedidoService {
         user_register,
         status: "Ativo",
       };
-
-      if (parsedDate) {
-        doc.date = parsedDate;
-      }
-
+      if (parsedDate) doc.date = parsedDate;
       return doc;
     });
 

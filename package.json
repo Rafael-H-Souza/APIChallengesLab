@@ -8,8 +8,10 @@
     "build": "npm run clean && tsc",
     "start": "node dist/server.js",
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "test": "jest --testTimeout=30000",
-    "test:watch": "jest --watch"
+    "test": "jest --runInBand",
+    "test:unit": "jest --selectProjects unit --runInBand",
+    "test:int": "jest --selectProjects integration --runInBand",
+    "coverage": "jest --coverage --runInBand"
   },
   "keywords": [],
   "author": "",

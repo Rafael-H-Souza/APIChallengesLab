@@ -2,69 +2,39 @@ import { Request, Response } from "express";
 import { PedidoService } from "../services/pedido.service";
 
 export class PedidoController {
-  private service: PedidoService;
+  private service = new PedidoService();
 
-  constructor() {
-    this.service = new PedidoService();
-  }
-
-  public create = async (req: Request, res: Response): Promise<Response> => {
-    try {
-      const pedido = await this.service.create(req.body);
-      return res.status(201).json(pedido);
-    } catch (error: any) {
-      return res.status(500).json({ message: error.message });
-    }
+  create = async (req: Request, res: Response) => {
+    const data = await this.service.create(req.body);
+    res.status(201).json(data);
   };
 
-  public getAll = async  (req: Request, res: Response) : Promise<Response> => {
-    try {
-      const pedidos = await this.service.getAll();
-      return res.json(pedidos);
-    } catch (error: any) {
-      return res.status(500).json({ message: error.message });
-    }
+  getAll = async (_req: Request, res: Response) => {
+    const data = await this.service.getAll();
+    res.json(data);
   };
 
-  public getById = async (req: Request, res: Response): Promise<Response> => {
-    try {
-      const id = req.params.id as string; 
-      const pedido = await this.service.getById(id);
-
-      if (!pedido) {
-        return res.status(404).json({ message: "Pedido não encontrado" });
-      }
-      return res.json(pedido);
-    } catch (error: any) {
-      return res.status(500).json({ message: error.message });
-    }
+  getById = async (req: Request, res: Response) => {
+    const id = req.params?.id as string | undefined;
+    if (!id) return res.status(400).json({ message: "Parâmetro 'id' é obrigatório" });
+    const data = await this.service.getById(id);
+    if (!data) return res.status(404).json({ message: "Pedido não encontrado" });
+    res.json(data);
   };
 
-  public update = async (req: Request, res: Response): Promise<Response> => {
-    try {
-      const id = req.params.id as string;
-      const pedido = await this.service.update(id, req.body);
-
-      if (!pedido) {
-        return res.status(404).json({ message: "Pedido não encontrado" });
-      }
-      return res.json(pedido);
-    } catch (error: any) {
-      return res.status(500).json({ message: error.message });
-    }
+  update = async (req: Request, res: Response) => {
+    const id = req.params?.id as string | undefined;
+    if (!id) return res.status(400).json({ message: "Parâmetro 'id' é obrigatório" });
+    const data = await this.service.update(id, req.body);
+    if (!data) return res.status(404).json({ message: "Pedido não encontrado" });
+    res.json(data);
   };
 
-  public delete = async (req: Request, res: Response): Promise<Response> => {
-    try {
-      const id = req.params.id as string;
-      const pedido = await this.service.delete(id);
-
-      if (!pedido) {
-        return res.status(404).json({ message: "Pedido não encontrado" });
-      }
-      return res.json({ message: "Pedido removido com sucesso" });
-    } catch (error: any) {
-      return res.status(500).json({ message: error.message });
-    }
+  delete = async (req: Request, res: Response) => {
+    const id = req.params?.id as string | undefined;
+    if (!id) return res.status(400).json({ message: "Parâmetro 'id' é obrigatório" });
+    const data = await this.service.delete(id);
+    if (!data) return res.status(404).json({ message: "Pedido não encontrado" });
+    res.status(204).send();
   };
 }
