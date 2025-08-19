@@ -1,16 +1,32 @@
-import "reflect-metadata";
-import express from "express";
-import { connectDB } from "./config/database";
-import { UserController } from "./controllers/user.controller";
+import dotenv from "dotenv";
+import mongoose from "mongoose";
+import { App } from "./app";
+import connectDB from "./config/database";
 
-const app = express();
-app.use(express.json());
+dotenv.config();
 
-const userController = new UserController();
-
-app.get("/user/:id", (req, res) => userController.getUser(req.params.id).then(res.json).catch(err => res.status(500).json({ error: err.message })));
-app.post("/user", (req, res) => userController.createUser(req.body).then(res.json).catch(err => res.status(500).json({ error: err.message })));
+const PORT = process.env.PORT || 3000;
+const myApp = new App();
 
 connectDB();
 
-app.listen(3000, () => console.log("API rodando na porta 3000"));
+myApp.app.get("/", (req, res) => {
+  res.send("API Logística rodando!");
+});
+
+myApp.app.get("/health", async (req, res) => {
+  const dbState = mongoose.connection.readyState;
+  const dbStatus = dbState === 1 ? "MongoDB conectado" : "MongoDB não conectado";
+
+  res.json({
+    server: "API Logística rodando",
+    database: dbStatus
+  });
+});
+
+
+myApp.app.listen(PORT, () => {
+  myApp.start()
+  console.log(`Servidor rodando na porta ${PORT}`);
+  console.log(`Swagger disponível em http://localhost:${PORT}/api-docs`);
+});

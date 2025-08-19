@@ -1,0 +1,36 @@
+
+services:
+  api-lab_logistica:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: lab_logistica:1.0
+    container_name: api_logistica_contaner
+    ports:
+      - "3000:3000"
+    volumes:
+     - ./src/swagger:/app/src/swagger
+    depends_on:
+      - db_lab_logistica
+    environment:
+      - MONGO_URI=mongodb://root:rootLab@db_lab_logistica:27017/db_Homologacao?authSource=admin
+    networks:
+      - app-network
+    command: ["dockerize", "-wait", "tcp://db_lab_logistica:27017", "-timeout", "120s", "node", "dist/server.js"]
+
+  db_lab_logistica:
+    image: mongo:latest
+    container_name: db_logistica_contaner
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: rootLab
+      MONGO_INITDB_DATABASE: db_Homologacao
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

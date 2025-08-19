@@ -2,24 +2,28 @@ import { PedidoModel } from "../models/pedido.model";
 import { IPedido } from "../interfaces/IPedido";
 
 export class PedidoRepository {
-  async create(pedido: Partial<IPedido>): Promise<IPedido> {
-    return PedidoModel.create(pedido);
+  async create(pedido: Partial<IPedido>) {
+    return await PedidoModel.create(pedido);
   }
 
-  async findAll(): Promise<IPedido[]> {
-    return PedidoModel.find();
+  async createMany(pedidos: Partial<IPedido>[]) {
+    return await PedidoModel.insertMany(pedidos);
   }
 
-  async findById(id: string): Promise<IPedido | null> {
-    return PedidoModel.findById(id);
+  async findAll() {
+    return await PedidoModel.find();
   }
 
-  async update(id: string, data: Partial<IPedido>): Promise<IPedido | null> {
-    return PedidoModel.findByIdAndUpdate(id, data, { new: true });
+  async findById(id: string) {
+    return await PedidoModel.findById(id);
   }
 
-  async delete(id: string): Promise<IPedido | null> {
-    return PedidoModel.findByIdAndDelete(id);
+  async update(id: string, data: Partial<IPedido>) {
+    return await PedidoModel.findByIdAndUpdate(id, data, { new: true });
+  }
+
+  async delete(id: string) {
+    return await PedidoModel.findByIdAndDelete(id);
   }
 }
 

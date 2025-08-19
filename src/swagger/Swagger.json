@@ -1,17 +1,17 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Pedidos API",
-    "description": "API para gestão de pedidos e upload de arquivo TXT desnormalizado, com parse/normalização e consulta.\n\n• Autenticação: Bearer JWT\n• Formato de datas: ISO 8601 (UTC)",
+    "title": "Pedidos API Digital",
+    "description": "API para gestão de pedidos e upload de arquivos TXT desnormalizados.\nAutenticação via Bearer JWT. Datas no formato ISO 8601 (UTC).",
     "version": "1.0.0"
   },
   "servers": [
     {
-      "url": "http://localhost:3000/api",
+      "url": "http://localhost:3000/",
       "description": "Ambiente local"
     },
     {
-      "url": "https://api.seudominio.com.br",
+      "url": "Link não Disponível - Versão Beta",
       "description": "Produção"
     }
   ],
@@ -19,10 +19,111 @@
     { "BearerAuth": [] }
   ],
   "tags": [
+    { "name": "Users", "description": "Registro e gerenciamento de usuários" },
     { "name": "Pedidos", "description": "CRUD e consultas de pedidos" },
-    { "name": "Uploads", "description": "Upload e acompanhamento de processamento de TXT" }
+    { "name": "Uploads", "description": "Upload e processamento de arquivos TXT" }
   ],
   "paths": {
+    "/user/register": {
+      "post": {
+        "tags": ["Users"],
+        "summary": "Registrar um novo usuário",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": { "type": "string" },
+                  "password": { "type": "string" }
+                },
+                "required": ["username", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Usuário registrado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string", "format": "uuid" },
+                    "username": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Erro ao registrar o usuário" }
+        }
+      }
+    },
+    "/api/user/login": {
+      "post": {
+        "tags": ["Users"],
+        "summary": "Login de usuário",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": { "type": "string" },
+                  "password": { "type": "string" }
+                },
+                "required": ["username", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login realizado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "token": { "type": "string" } }
+                }
+              }
+            }
+          },
+          "400": { "description": "Erro ao realizar login" }
+        }
+      }
+    },
+    "/api/user/user": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Obter a lista de usuários",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Lista de usuários",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": { "type": "string", "format": "uuid" },
+                      "username": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Erro ao obter a lista de usuários" }
+        }
+      }
+    },
     "/pedidos": {
       "get": {
         "tags": ["Pedidos"],
@@ -32,20 +133,16 @@
           { "$ref": "#/components/parameters/limit" },
           { "$ref": "#/components/parameters/sort" },
           { "$ref": "#/components/parameters/order" },
-          { "name": "clienteId", "in": "query", "schema": {"type": "string"}},
-          { "name": "status", "in": "query", "schema": { "$ref": "#/components/schemas/PedidoStatus"}},
-          { "name": "dataInicio", "in": "query", "schema": {"type": "string", "format": "date-time"}},
-          { "name": "dataFim", "in": "query", "schema": {"type": "string", "format": "date-time"}},
-          { "name": "busca", "in": "query", "schema": {"type": "string"}}
+          { "name": "clienteId", "in": "query", "schema": { "type": "string" } },
+          { "name": "status", "in": "query", "schema": { "$ref": "#/components/schemas/PedidoStatus" } },
+          { "name": "dataInicio", "in": "query", "schema": { "type": "string", "format": "date-time" } },
+          { "name": "dataFim", "in": "query", "schema": { "type": "string", "format": "date-time" } },
+          { "name": "busca", "in": "query", "schema": { "type": "string" } }
         ],
         "responses": {
           "200": {
             "description": "Lista paginada de pedidos",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/PedidoPage" }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PedidoPage" } } }
           }
         }
       },
@@ -55,14 +152,12 @@
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/PedidoCreate" }
-            }
+            "application/json": { "schema": { "$ref": "#/components/schemas/PedidoCreate" } }
           }
         },
         "responses": {
-          "201": { "description": "Pedido criado", "content": {"application/json": {"schema": { "$ref": "#/components/schemas/Pedido"}}}},
-          "400": { "description": "Erro de validação", "content": {"application/json": {"schema": { "$ref": "#/components/schemas/Error"}}}}
+          "201": { "description": "Pedido criado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Pedido" } } } },
+          "400": { "description": "Erro de validação", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
         }
       }
     },
@@ -77,12 +172,7 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "file": { "type": "string", "format": "binary" },
-                  "layout": { "type": "string", "default": "LEGADO_V1" },
-                  "delimiter": { "type": "string" },
-                  "encoding": { "type": "string", "default": "UTF-8" },
-                  "skipHeader": { "type": "boolean", "default": true },
-                  "dryRun": { "type": "boolean", "default": false }
+                  "file": { "type": "string", "format": "binary" }
                 },
                 "required": ["file"]
               }
@@ -90,22 +180,26 @@
           }
         },
         "responses": {
-          "201": { "description": "Job de processamento criado", "content": {"application/json": {"schema": { "$ref": "#/components/schemas/UploadJobCreated"}}}},
-          "400": { "description": "Requisição inválida", "content": {"application/json": {"schema": { "$ref": "#/components/schemas/Error"}}}}
+          "201": { "description": "Job de processamento criado", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UploadJobCreated" } } } },
+          "400": { "description": "Requisição inválida", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
         }
       }
     }
   },
   "components": {
     "securitySchemes": {
-      "BearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "JWT" }
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Use o token JWT: 'Bearer {seu_token_aqui}'"
+      }
     },
     "parameters": {
-      "page": { "name": "page", "in": "query", "schema": {"type": "integer", "default": 1}},
-      "limit": { "name": "limit", "in": "query", "schema": {"type": "integer", "default": 20}},
-      "sort": { "name": "sort", "in": "query", "schema": {"type": "string"}},
-      "order": { "name": "order", "in": "query", "schema": {"type": "string", "enum": ["asc","desc"], "default": "desc"}}
+      "page": { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+      "limit": { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } },
+      "sort": { "name": "sort", "in": "query", "schema": { "type": "string" } },
+      "order": { "name": "order", "in": "query", "schema": { "type": "string", "enum": ["asc", "desc"], "default": "desc" } }
     }
   }
 }
-
