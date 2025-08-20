@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PedidoController = void 0;
 const pedido_service_1 = require("../services/pedido.service");
+const pedido_validation_schemas_1 = require("../validations/pedido.validation.schemas");
 class PedidoController {
     constructor() {
         this.service = new pedido_service_1.PedidoService();
@@ -40,6 +41,15 @@ class PedidoController {
                 return res.status(404).json({ message: "Pedido não encontrado" });
             res.status(204).send();
         };
+    }
+    async getByPeriodo(params) {
+        const parsed = pedido_validation_schemas_1.PeriodoQuerySchema.safeParse(params);
+        if (!parsed.success) {
+            const error = new Error("Parâmetros inválidos no controller");
+            error.statusCode = 400;
+            throw error;
+        }
+        return this.service.getByPeriodo(parsed.data);
     }
 }
 exports.PedidoController = PedidoController;

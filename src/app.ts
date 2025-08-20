@@ -32,10 +32,14 @@ export class App {
   }
 
   private routes(): void {
+    this.app.use("/pedido", PedidoRoutes.getRouter());
     this.app.use("/pedidos", PedidoRoutes.getRouter());
     this.app.use("/uploads", UploadRoutes.getRouter());
     this.app.use("/user", UserRouter.getRouter());
   }
 }
+//GET /pedidos/periodo?dataInicio=2025-08-01&dataFim=2025-08-19&page=1&limit=20&order=desc
+
+//http://localhost:3000/pedidos/periodo?dataInicio=2025-08-01&dataFim=2020-08-19
 
 export default new App().app;

@@ -1,7 +1,11 @@
 import User from "../models/user.model";
 import { IUser } from "../interfaces/IUser";
 
-class UserRepository {
+
+import bcrypt from "bcryptjs";
+
+
+export class UserRepository {
   public async createUser(user: Partial<IUser>): Promise<IUser> {
     
     const lastUser = await User.findOne().sort({ userID: -1 }).exec();

@@ -95,7 +95,7 @@
                 }
             }
         },
-        "/user/users": {
+        "/user/lista": {
             "get": {
                 "tags": ["Users"],
                 "summary": "Obter a lista de usuários",
@@ -122,40 +122,11 @@
                 }
             }
         },
-        "/pedidos": {
+        "/pedido/lista": {
             "get": {
                 "tags": ["Pedidos"],
-                "summary": "Listar pedidos",
-                "parameters": [
-                    { "$ref": "#/components/parameters/page" },
-                    { "$ref": "#/components/parameters/limit" },
-                    { "$ref": "#/components/parameters/sort" },
-                    { "$ref": "#/components/parameters/order" },
-                    {
-                        "name": "id",
-                        "in": "query",
-                        "description": "Filtrar pelo identificador do pedido. Retorna objetos com a propriedade 'id'.",
-                        "schema": { "type": "string" }
-                    },
-                    {
-                        "name": "idPedido",
-                        "in": "query",
-                        "description": "Filtrar pelo identificador do pedido retornando a propriedade 'idPedido' no corpo.",
-                        "schema": { "type": "string" }
-                    },
-                    {
-                        "name": "dataInicio",
-                        "in": "query",
-                        "description": "Data inicial do intervalo (formato ISO 8601)",
-                        "schema": { "type": "string", "format": "date" }
-                    },
-                    {
-                        "name": "dataFim",
-                        "in": "query",
-                        "description": "Data final do intervalo (formato ISO 8601)",
-                        "schema": { "type": "string", "format": "date" }
-                    }
-                ],
+                "summary": "Listar todos os pedidos (sem parâmetros)",
+                "security": [{ "BearerAuth": [] }],
                 "responses": {
                     "200": {
                         "description": "Lista de pedidos",
@@ -168,34 +139,63 @@
                             }
                         }
                     },
-                    "400": { "description": "Erro nos parâmetros de consulta" }
-                }
-            },
-            "post": {
-                "tags": ["Pedidos"],
-                "summary": "Criar pedido",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": { "schema": { "$ref": "#/components/schemas/PedidoCreate" } }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "Pedido criado",
-                        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Pedido" } } }
-                    },
-                    "400": {
-                        "description": "Erro de validação",
-                        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
-                    }
+                    "500": { "description": "Erro interno" }
                 }
             }
         },
-        "/pedidos/{id}": {
+        "/pedidos/periodo": {
+            "get": {
+                "tags": ["Pedidos"],
+                "summary": "Listar pedidos por período",
+                "security": [{ "BearerAuth": [] }],
+                "parameters": [
+                    {
+                        "name": "dataInicio",
+                        "in": "query",
+                        "required": true,
+                        "schema": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+                        "example": "2025-08-01",
+                        "description": "Data inicial (YYYY-MM-DD). Também aceita ISO completo."
+                    },
+                    {
+                        "name": "dataFim",
+                        "in": "query",
+                        "required": true,
+                        "schema": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+                        "example": "2025-08-19",
+                        "description": "Data final (YYYY-MM-DD). Também aceita ISO completo."
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de pedidos no período",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": { "type": "boolean" },
+                                        "message": { "type": "string" },
+                                        "start": { "type": "string", "format": "date-time" },
+                                        "end": { "type": "string", "format": "date-time" },
+                                        "data": {
+                                            "type": "array",
+                                            "items": { "$ref": "#/components/schemas/Pedido" }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": { "description": "Query inválida" }
+                }
+            }
+        },
+        "/pedido/{id}": {
             "get": {
                 "tags": ["Pedidos"],
                 "summary": "Obter pedido pelo ID",
+                "security": [{ "BearerAuth": [] }],
                 "parameters": [
                     {
                         "name": "id",
@@ -215,6 +215,7 @@
             "put": {
                 "tags": ["Pedidos"],
                 "summary": "Atualizar pedido",
+                "security": [{ "BearerAuth": [] }],
                 "parameters": [
                     {
                         "name": "id",
@@ -240,6 +241,7 @@
             "delete": {
                 "tags": ["Pedidos"],
                 "summary": "Remover pedido",
+                "security": [{ "BearerAuth": [] }],
                 "parameters": [
                     {
                         "name": "id",
@@ -258,6 +260,7 @@
             "post": {
                 "tags": ["Uploads"],
                 "summary": "Upload de arquivo TXT desnormalizado",
+                "security": [{ "BearerAuth": [] }],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -287,7 +290,10 @@
                             }
                         }
                     },
-                    "400": { "description": "Requisição inválida" }
+                    "400": { "description": "Requisição inválida" },
+                    "401": { "description": "Não autenticado" },
+                    "403": { "description": "Sem permissão" },
+                    "404": { "description": "Usuário não encontrado" }
                 }
             }
         }

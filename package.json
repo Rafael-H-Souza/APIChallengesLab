@@ -5,20 +5,28 @@
   "main": "dist/server.js",
   "scripts": {
     "clean": "rimraf dist",
-    "build": "npm run clean && tsc",
     "start": "node dist/server.js",
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "test": "jest --runInBand",
     "test:unit": "jest --selectProjects unit --runInBand",
     "test:int": "jest --selectProjects integration --runInBand",
-    "coverage": "jest --coverage --runInBand"
+    "coverage": "jest --coverage --runInBand",
+    "docker:build": "docker-compose -f docker-compose.test.yml build --no-cache",
+    "docker:up": "npm run docker:build && docker-compose -f docker-compose.test.yml up --abort-on-container-exit",
+    "docker:down": "docker-compose -f docker-compose.test.yml down -v",
+    "build": "tsc -p tsconfig.json ",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "jest --passWithNoTests && jest --runInBand",
+    "test:ci": "jest --coverage --runInBand",
+    "lint": "eslint . --ext .ts",
+    "format": "prettier --check .",
+    "format:fix": "prettier --write ."
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.2",
     "body-parser": "^2.2.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
@@ -29,10 +37,12 @@
     "multer": "^2.0.2",
     "sequelize": "^6.37.7",
     "swagger-ui-express": "^5.0.1",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "zod": "^4.0.17"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
+    "@types/bcryptjs": "^2.4.6",
     "@types/body-parser": "^1.19.6",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",

@@ -15,7 +15,7 @@ class UploadRoutes {
         this.initializeRoutes();
     }
     initializeRoutes() {
-        this.router.post("/txt", upload.single("file"), this.controller.upload);
+        this.router.post("/txt", upload.single("file"), this.controller.uploadFile);
     }
     static getRouter() {
         return new UploadRoutes().router;

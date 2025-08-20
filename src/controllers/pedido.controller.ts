@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { PedidoService } from "../services/pedido.service";
+import { PeriodoQuery, PeriodoQuerySchema } from "../validations/pedido.validation.schemas";
 
 export class PedidoController {
   private service = new PedidoService();
@@ -37,4 +38,13 @@ export class PedidoController {
     if (!data) return res.status(404).json({ message: "Pedido não encontrado" });
     res.status(204).send();
   };
+  async getByPeriodo(params: PeriodoQuery) {
+    const parsed = PeriodoQuerySchema.safeParse(params);
+    if (!parsed.success) {
+      const error = new Error("Parâmetros inválidos no controller");
+      (error as any).statusCode = 400;
+      throw error;
+    }
+    return this.service.getByPeriodo(parsed.data);
+  }
 }

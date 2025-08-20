@@ -15,7 +15,7 @@ export class UploadRoutes {
   }
 
   private initializeRoutes() {
-    this.router.post("/txt", upload.single("file"), this.controller.upload)  
+    this.router.post("/txt", upload.single("file"), this.controller.uploadFile)  
     
   }
 

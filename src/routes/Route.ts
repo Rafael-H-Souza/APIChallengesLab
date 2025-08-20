@@ -1,5 +1,5 @@
 
-import { Router, Request, Response, NextFunction } from "express";
+import { Router, Request, Response, NextFunction, RequestHandler } from "express";
 
 type Handler = (req: Request, res: Response, next: NextFunction) => any;
 
@@ -12,22 +12,22 @@ export abstract class Route {
 
   protected abstract initializeRoutes(): void;
 
-  protected get(path: string, handler: Handler) {
-    this.router.get(path, handler);
+  
+  protected patch(path: string, ...handlers: RequestHandler[]) {
+    this.router.get(path, ...handlers);
   }
-  protected post(path: string, handler: Handler) {
-    this.router.post(path, handler);
+  protected get(path: string, ...handlers: RequestHandler[]) {
+    this.router.get(path, ...handlers);
   }
-  protected put(path: string, handler: Handler) {
-    this.router.put(path, handler);
+  protected post(path: string, ...handlers: RequestHandler[]) {
+    this.router.post(path, ...handlers);
   }
-  protected patch(path: string, handler: Handler) {
-    this.router.patch(path, handler);
+  protected put(path: string, ...handlers: RequestHandler[]) {
+    this.router.put(path, ...handlers);
   }
-  protected delete(path: string, handler: Handler) {
-    this.router.delete(path, handler);
+  protected delete(path: string, ...handlers: RequestHandler[]) {
+    this.router.delete(path, ...handlers);
   }
-
   public static getRouter<T extends Route>(this: new () => T): Router {
     const instance = new this();
     instance.initializeRoutes();

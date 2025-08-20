@@ -1,27 +1,120 @@
-name: Node.js CI with Docker Compose
+name: CI
+run-name: Pipeline de integração CI (Docker Compose)
 
 on:
   push:
-    branches: [ "main", "develop" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "main", "develop" ]
+    branches: [ "main" ]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: read
 
 jobs:
   docker-test:
+    name: Build & Test (Compose) + Sonar
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DOCKER_BUILDKIT: "1"
+      COMPOSE_DOCKER_CLI_BUILD: "1"
+      COMPOSE_FILE: docker-compose.test.yml
+      TEST_SERVICE: tests
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and run tests
+      - name: Show Docker/Compose versions
         run: |
-          docker-compose -f docker-compose.test.yml build
-          docker-compose -f docker-compose.test.yml up --abort-on-container-exit
+          docker version
+          docker compose version
 
-      - name: Stop containers
+      - name: Build images
+        run: docker compose -f "$COMPOSE_FILE" build --pull
+
+      - name: Up (run tests) and wait
+        run: |
+          if docker compose -f "$COMPOSE_FILE" config --services | grep -qx "$TEST_SERVICE"; then
+            echo "Using --exit-code-from=$TEST_SERVICE"
+            docker compose -f "$COMPOSE_FILE" up --abort-on-container-exit --exit-code-from "$TEST_SERVICE"
+          else
+            echo "Service '$TEST_SERVICE' not found. Running without --exit-code-from."
+            docker compose -f "$COMPOSE_FILE" up --abort-on-container-exit
+          fi
+
+      - name: Save compose logs
         if: always()
-        run: docker-compose -f docker-compose.test.yml down
+        run: |
+          mkdir -p artifacts
+          docker compose -f "$COMPOSE_FILE" logs --no-color > artifacts/compose.log || true
+
+      - name: Try to extract coverage (best-effort)
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p artifacts/coverage
+          TEST_CID=$(docker compose -f "$COMPOSE_FILE" ps -q "$TEST_SERVICE" || true)
+          if [ -n "$TEST_CID" ]; then
+            for p in /app/coverage/lcov.info /usr/src/app/coverage/lcov.info /workspace/coverage/lcov.info; do
+              if docker exec "$TEST_CID" sh -c "[ -f $p ]" 2>/dev/null; then
+                docker cp "$TEST_CID:$p" artifacts/coverage/lcov.info
+                echo "Cobertura encontrada em $p"
+                break
+              fi
+            done
+          else
+            echo "Container do serviço '$TEST_SERVICE' não encontrado; pulando extração de coverage."
+          fi
+
+   
+      - name: SonarQube Scan
+        if: always() 
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        with:
+          
+          args: >
+            -Dsonar.projectKey=Lab-api-Logistica-DevOpv
+            -Dsonar.projectName=Lab-api-Logistica-DevOpv
+            -Dsonar.projectVersion=1.0
+            -Dsonar.sources=.
+            -Dsonar.tests=.
+            -Dsonar.test.inclusions=**/*.spec.ts,**/*.test.ts
+            -Dsonar.javascript.lcov.reportPaths=artifacts/coverage/lcov.info
+            -Dsonar.coverage.exclusions=**/*.spec.ts,**/*.test.ts,**/tests/**
+
+      - name: Quality Gate (optional)
+        if: always()
+        uses: SonarSource/sonarqube-quality-gate-action@v1.1.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        with:
+          timeout: 300
+
+      - name: Upload logs & coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-artifacts
+          path: |
+            artifacts/compose.log
+            artifacts/coverage/lcov.info
+          if-no-files-found: warn
+
+      - name: Down (clean)
+        if: always()
+        run: docker compose -f "$COMPOSE_FILE" down -v --remove-orphans

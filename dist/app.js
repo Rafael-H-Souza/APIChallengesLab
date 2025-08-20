@@ -30,10 +30,13 @@ class App {
         this.app.use(express_1.default.json());
     }
     routes() {
+        this.app.use("/pedido", pedido_routes_1.PedidoRoutes.getRouter());
         this.app.use("/pedidos", pedido_routes_1.PedidoRoutes.getRouter());
         this.app.use("/uploads", upload_routes_1.UploadRoutes.getRouter());
         this.app.use("/user", user_routes_1.UserRouter.getRouter());
     }
 }
 exports.App = App;
+//GET /pedidos/periodo?dataInicio=2025-08-01&dataFim=2025-08-19&page=1&limit=20&order=desc
+//http://localhost:3000/pedidos/periodo?dataInicio=2025-08-01&dataFim=2020-08-19
 exports.default = new App().app;

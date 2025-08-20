@@ -1,64 +1,72 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PedidoService = void 0;
-const fs_1 = __importDefault(require("fs"));
-const mongoose_1 = require("mongoose");
 const pedido_repository_1 = require("../repositories/pedido.repository");
-const toInt = (s) => {
-    const n = parseInt(s.trim(), 10);
-    return Number.isFinite(n) ? n : NaN;
-};
+const isValidDate = (d) => !isNaN(d.getTime());
+const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+const setStartOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
+const setEndOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
+const MAX_LIMIT = 200;
+const MAX_RANGE_DAYS = 366;
 class PedidoService {
-    constructor() { this.repository = new pedido_repository_1.PedidoRepository(); }
-    async create(data) { return this.repository.create(data); }
-    async getAll() { return this.repository.findAll(); }
-    async getById(id) { return this.repository.findById(id); }
-    async update(id, data) { return this.repository.update(id, data); }
-    async delete(id) { return this.repository.delete(id); }
-    async processFile(filePath, { user_register = "system" } = {}) {
-        const raw = fs_1.default.readFileSync(filePath, "utf-8");
-        const lines = raw.split(/\r?\n/).filter((l) => l.trim() !== "");
-        const docs = lines.map((line) => {
-            const user_id = toInt(line.slice(0, 10));
-            const name = line.slice(11, 55).trim();
-            const order_id = toInt(line.slice(55, 65));
-            const product_id = toInt(line.slice(65, 75));
-            const valueStr = line.slice(77, 87).trim().replace(",", ".");
-            const value = mongoose_1.Types.Decimal128.fromString(valueStr || "0");
-            const rawDate = line.slice(87, 96).trim();
-            const parsedDate = rawDate.length === 8
-                ? new Date(`${rawDate.slice(0, 4)}-${rawDate.slice(4, 6)}-${rawDate.slice(6, 8)}T00:00:00Z`)
-                : undefined;
-            const doc = {
-                user_id,
-                name,
-                order_id,
-                product_id,
-                value,
-                date_register: new Date(),
-                user_register,
-                status: "Ativo",
-            };
-            if (parsedDate)
-                doc.date = parsedDate;
-            return doc;
+    constructor() {
+        this.repository = new pedido_repository_1.PedidoRepository();
+    }
+    async getByPeriodo(params) {
+        let { dataInicio, dataFim, page, limit, order } = params;
+        const inicio = new Date(dataInicio);
+        const fim = new Date(dataFim);
+        if (!isValidDate(inicio) || !isValidDate(fim)) {
+            const e = new Error("Parâmetros de data inválidos. Use o formato YYYY-MM-DD.");
+            e.statusCode = 400;
+            throw e;
+        }
+        if (inicio > fim) {
+            const e = new Error("A data inicial não pode ser maior que a data final.");
+            e.statusCode = 400;
+            throw e;
+        }
+        const diffDays = Math.ceil((setEndOfDay(fim).getTime() - setStartOfDay(inicio).getTime()) / (1000 * 60 * 60 * 24));
+        if (diffDays > MAX_RANGE_DAYS) {
+            const e = new Error(`Intervalo muito grande (${diffDays} dias). Máximo permitido: ${MAX_RANGE_DAYS} dias.`);
+            e.statusCode = 400;
+            throw e;
+        }
+        page = clamp(Number(page || 1), 1, 1000000);
+        limit = clamp(Number(limit || 20), 1, MAX_LIMIT);
+        order = order === "asc" ? "asc" : "desc";
+        const inicioDay = setStartOfDay(inicio);
+        const fimDay = setEndOfDay(fim);
+        const { data, total } = await this.repository.findByPeriodo({
+            dataInicio: inicioDay,
+            dataFim: fimDay,
+            page,
+            limit,
+            order,
         });
-        const valid = docs.filter((d) => Number.isFinite(d.user_id) &&
-            Number.isFinite(d.order_id) &&
-            Number.isFinite(d.product_id) &&
-            d.value instanceof mongoose_1.Types.Decimal128 &&
-            !!d.name &&
-            d.date instanceof Date);
-        const saveResult = await this.repository.addMany(valid);
         return {
-            totalLines: lines.length,
-            parsed: docs.length,
-            valid: valid.length,
-            ...saveResult,
+            meta: { page, limit, total, totalPages: Math.ceil(total / limit) || 1, order, dataInicio: inicioDay.toISOString(), dataFim: fimDay.toISOString(),
+            },
+            data,
         };
+    }
+    async create(pedido) {
+        return await this.repository.create(pedido);
+    }
+    async addMany(pedidos) {
+        return await this.repository.addMany(pedidos);
+    }
+    async getAll() {
+        return await this.repository.findAll();
+    }
+    async getById(id) {
+        return await this.repository.findById(id);
+    }
+    async update(id, data) {
+        return await this.repository.update(id, data);
+    }
+    async delete(id) {
+        return await this.repository.delete(id);
     }
 }
 exports.PedidoService = PedidoService;

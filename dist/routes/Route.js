@@ -6,20 +6,20 @@ class Route {
     constructor() {
         this.router = (0, express_1.Router)();
     }
-    get(path, handler) {
-        this.router.get(path, handler);
+    patch(path, ...handlers) {
+        this.router.get(path, ...handlers);
     }
-    post(path, handler) {
-        this.router.post(path, handler);
+    get(path, ...handlers) {
+        this.router.get(path, ...handlers);
     }
-    put(path, handler) {
-        this.router.put(path, handler);
+    post(path, ...handlers) {
+        this.router.post(path, ...handlers);
     }
-    patch(path, handler) {
-        this.router.patch(path, handler);
+    put(path, ...handlers) {
+        this.router.put(path, ...handlers);
     }
-    delete(path, handler) {
-        this.router.delete(path, handler);
+    delete(path, ...handlers) {
+        this.router.delete(path, ...handlers);
     }
     static getRouter() {
         const instance = new this();

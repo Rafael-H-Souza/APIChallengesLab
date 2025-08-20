@@ -15,6 +15,14 @@ class UserRouter {
         this.router.post("/login", this.userController.login.bind(this.userController));
         this.router.put("/updatePassword", auth_middeware_1.authenticateToken, this.userController.updatePassword.bind(this.userController));
         this.router.get("/user", auth_middeware_1.authenticateToken, this.userController.getUsers.bind(this.userController));
+        this.router.get("/lista", auth_middeware_1.authenticateToken, async (req, res, next) => {
+            try {
+                await this.userController.getUsers(req, res);
+            }
+            catch (error) {
+                next(error);
+            }
+        });
     }
     static getRouter() {
         return new UserRouter().router;

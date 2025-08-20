@@ -14,6 +14,22 @@ const base: Config = {
 };
 
 const config: Config = {
+      preset: "ts-jest",
+      testEnvironment: "node",
+      roots: ["<rootDir>/tests", "<rootDir>/src"],
+      moduleFileExtensions: ["ts", "js", "json"],
+      collectCoverage: true,
+      coverageProvider: "v8",
+      collectCoverageFrom: [
+        "src/**/*.ts",
+        "!src/**/*.d.ts",
+        "!src/**/index.ts",
+      ],
+      coverageReporters: ["text", "lcov", "cobertura"],
+      coverageDirectory: "coverage",
+      coverageThreshold: {
+        global: { branches: 80, functions: 85, lines: 85, statements: 85 },
+      },
   projects: [
     {
       ...base,

@@ -158,7 +158,17 @@ docker-compose up -d --build
 
 # Logs
 docker-compose logs -f
+
+
 ```
+
+
+# imagem Docker
+
+* A apicação contém um containercom a nomenclatura de api-logistica-lab que contem a divisão de banco (db_lab_logistica) e a logica da aplicação (api_logistica_container)
+
+<img src="./docs/img/image-docker.png" alt="Available authorizations - TOKEN" width="800"/>
+
 
 > O compose define o `MONGO_URI` e aguarda o banco estar pronto antes de iniciar o servidor.
 
@@ -188,7 +198,7 @@ Principais endpoints (prefixo sugerido /):
 
 ### Pedidos
 
-* GET /pedidos – Lista pedidos (com paginação e filtros)
+* GET /pedidos – Lista pedidos (filtros)
 
 * GET /pedidos/:id – Detalhe por ID
 
@@ -198,13 +208,35 @@ Principais endpoints (prefixo sugerido /):
 
 * DELETE /pedidos/:id – Remove
 
-### Upload
+## Upload
 
-* POST /upload – Recebe arquivo .txt (multipart/form-data campo file) e processa.
+### POST /upload – Recebe arquivo .txt (multipart/form-data campo file) e processa.
 
-### Usuários (se aplicável)
+<img src="./docs/img/img-update-file.png" alt="POST /user/register" width="600"/>
 
-* GET /users, GET /users/:id, etc.
+## Usuários 
+
+### * POST /user/register
+
+<img src="./docs/img/image.png" alt="POST /user/register" width="600"/>
+
+### * GET /user/login
+
+<img src="./docs/img/image-1.png" alt="GET /user/login" width="600"/>
+
+
+### * Available authorizations - TOKEN
+
+<img src="./docs/img/image-2.png" alt="Available authorizations - TOKEN" width="600"/>
+
+### * GET /user/lista
+<img src="./docs/img/img-get-lista-users.png" alt="GET /user/login" width="600"/>
+
+```
+
+* Token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4YTRlMThiODNhZTYzYWM5YjkzMDg3MiIsImlhdCI6MTc1NTYzNjEzOCwiZXhwIjoxNzU1NjM5NzM4fQ.wYHgLKla1-XjKhQeU1zA6Wizz1c_HoUELB0blBCAFJE 
+
+```
 
 Swagger UI: exposto em /api-docs.
 

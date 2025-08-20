@@ -1,25 +1,33 @@
-import bcrypt from "bcrypt";
+import bcrypt = require("bcryptjs");
 import jwt from "jsonwebtoken";
 import { IUser } from "../interfaces/IUser"; 
-import userRepository from "../repositories/user.repository";
+import {UserRepository} from "../repositories/user.repository";
+import dotenv from "dotenv";
 
-const SECRET_KEY = "51_Pinga"; // ideal usar process.env.SECRET_KEY
+dotenv.config();
+
+
+const secretKey = process.env.SECRET_KEY as string;
+
 
 export class UserService {
+  userRepository = new UserRepository()
+
+
   public async register(username: string, password: string): Promise<IUser> {
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await userRepository.createUser({username, password: hashedPassword });
+    const user = await this.userRepository.createUser({username, password: hashedPassword });
     return user;
   }
 
 
   public async getUsers(): Promise<IUser[]> {
-    return userRepository.findAll();
+    return this.userRepository.findAll();
   }
 
 
   public async getUser(username: string): Promise<IUser> {
-    const user = await userRepository.findByUserName(username);
+    const user = await this.userRepository.findByUserName(username);
 
     if (!user) {
       throw new Error("User not found");
@@ -30,7 +38,7 @@ export class UserService {
 
 
   public async login(username: string, password: string): Promise<string> {
-    const user = await userRepository.findByUserName(username);
+    const user = await this.userRepository.findByUserName(username);
 
     if (!user) {
       throw new Error("User not found");
@@ -42,11 +50,10 @@ export class UserService {
       throw new Error("User or password is not valid");
     }
 
-    const token = jwt.sign({ id: user.id }, SECRET_KEY, { expiresIn: "1h" });
+    const token = jwt.sign({ id: user.id }, secretKey , { expiresIn: "1h" });
     return token;
   }
 
-  // Atualizar senha
   public async updatePassword(
     username: string,
     oldPassword: string,
@@ -65,7 +72,7 @@ export class UserService {
     }
 
     const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-    await userRepository.updatePassword(user.userID, hashedNewPassword);
+    await this.userRepository.updatePassword(user.userID, hashedNewPassword);
   }
 }
 
