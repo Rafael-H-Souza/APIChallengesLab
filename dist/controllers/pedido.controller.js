@@ -2,14 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PedidoController = void 0;
 const pedido_service_1 = require("../services/pedido.service");
-const pedido_validation_schemas_1 = require("../validations/pedido.validation.schemas");
 class PedidoController {
     constructor() {
         this.service = new pedido_service_1.PedidoService();
-        this.create = async (req, res) => {
-            const data = await this.service.create(req.body);
-            res.status(201).json(data);
-        };
         this.getById = async (req, res) => {
             const orderId = Number(req.params.id);
             if (isNaN(orderId)) {
@@ -22,14 +17,32 @@ class PedidoController {
             return res.json(pedido);
         };
     }
-    async getByPeriodo(params) {
-        const parsed = pedido_validation_schemas_1.PeriodoQuerySchema.safeParse(params);
-        if (!parsed.success) {
-            const error = new Error("Parâmetros inválidos no controller");
-            error.statusCode = 400;
-            throw error;
+    async getByPeriodo(req, res) {
+        try {
+            const { dataInicio, dataFim } = req.query;
+            const pedidos = await this.service.findByPeriodo(dataInicio, dataFim);
+            console.log("[CONTROLLER] datas recebidas:", dataInicio, dataFim);
+            if (!pedidos || pedidos.length === 0) {
+                return res.status(200).json({
+                    success: true,
+                    message: "Nenhum pedido encontrado nesse período",
+                    start: dataInicio,
+                    end: dataFim,
+                    data: []
+                });
+            }
+            console.log("controller.findByPeriodo");
+            return res.json({
+                success: true,
+                message: "Pedidos encontrados com sucesso",
+                start: dataInicio,
+                end: dataFim,
+                data: pedidos
+            });
         }
-        return this.service.getByPeriodo(parsed.data);
+        catch (err) {
+            return res.status(500).json({ message: err.message ?? "Erro interno" });
+        }
     }
 }
 exports.PedidoController = PedidoController;

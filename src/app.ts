@@ -37,7 +37,7 @@ export class App {
   }
 
   private routes(): void {
-    this.app.use(["/pedido","/pedidos"], PedidoRoutes.getRouter());
+    this.app.use("/pedido", PedidoRoutes.getRouter());
     this.app.use("/uploads", UploadRoutes.getRouter());
     this.app.use("/user", UserRouter.getRouter());
   }

@@ -6,16 +6,6 @@ import { PeriodoQuery, PeriodoQuerySchema } from "../validations/pedido.validati
 export class PedidoController {
   private service = new PedidoService();
 
-  create = async (req: Request, res: Response) => {
-    const data = await this.service.create(req.body);
-    res.status(201).json(data);
-  };
-
-  
-
-  
-  
-
   getById = async (req: Request, res: Response) => {
       const orderId = Number(req.params.id);
       if (isNaN(orderId)) {
@@ -31,16 +21,37 @@ export class PedidoController {
     };
 
 
+  
+    async getByPeriodo(req: Request, res: Response) {
+      
+    try {
+      const { dataInicio, dataFim }:{ dataInicio?: string | any ; dataFim?: string  | any }= req.query as { dataInicio?: string; dataFim?: string };
+      const pedidos = await this.service.findByPeriodo(dataInicio, dataFim )
+      console.log("[CONTROLLER] datas recebidas:", dataInicio, dataFim);
 
 
-
-  async getByPeriodo(params: PeriodoQuery) {
-    const parsed = PeriodoQuerySchema.safeParse(params);
-    if (!parsed.success) {
-      const error = new Error("Parâmetros inválidos no controller");
-      (error as any).statusCode = 400;
-      throw error;
+      if (!pedidos || pedidos.length === 0) {
+        return res.status(200).json({
+          success: true,
+          message: "Nenhum pedido encontrado nesse período",
+          start: dataInicio,
+          end: dataFim,
+          data: []
+        });
+      }
+       console.log("controller.findByPeriodo")
+      return res.json({
+        success: true,
+        message: "Pedidos encontrados com sucesso",
+        start: dataInicio,
+        end: dataFim,
+        data: pedidos
+      });
+    } catch (err: any) {
+      return res.status(500).json({ message: err.message ?? "Erro interno" });
     }
-    return this.service.getByPeriodo(parsed.data);
   }
 }
+
+
+

@@ -198,15 +198,15 @@ Principais endpoints (prefixo sugerido /):
 
 ### Pedidos
 
-* GET /pedidos – Lista pedidos (filtros)
+
 
 * GET /pedidos/:id – Detalhe por ID
 
-* POST /pedidos – Cria manualmente (quando necessário)
+<img src="./docs/img/image-get-pedido-por-periodo.png" alt="GET /user/login" width="600"/>
 
-* PUT /pedidos/:id – Atualiza
-
-* DELETE /pedidos/:id – Remove
+* GET /pedidos/:id 
+<img src="./docs/img/image-get-pedido-id.png" alt="GET /user/login" width="600"/>
+![alt text](image.png)
 
 ## Upload
 

@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PedidoRepository = void 0;
 const mongoose_1 = require("mongoose");
 const pedido_model_1 = require("../models/pedido.model");
+const pedido_parser_1 = require("../utils/pedido.parser");
 const isValidDate = (d) => !isNaN(d.getTime());
 const isDefined = (x) => x != null;
 class PedidoRepository {
@@ -18,46 +19,39 @@ class PedidoRepository {
             return { success: false, message: "Erro ao criar pedido.", error: error.message };
         }
     }
-    async findAll(limit = 20) {
-        try {
-            const safeLimit = Math.min(100, Math.max(1, Number(limit)));
-            const docs = await this.model
-                .find({})
-                .sort({ date: 1, _id: 1 }) // ASC por data; _id para desempate
-                .limit(safeLimit)
-                .lean();
-            // Converter Decimal128 -> string quando usando .lean()
-            const data = docs.map((it) => ({
-                ...it,
-                value: it?.value?.toString?.() ?? it?.value,
-            }));
-            return { success: true, message: "Pedidos encontrados com sucesso.", data };
-        }
-        catch (error) {
-            return { success: false, message: "Erro ao buscar pedidos.", error: error.message };
-        }
-    }
     async findByOrderId(orderId) {
-        return this.model.findOne({ order_id: orderId }).lean();
+        const docs = await this.model.find({ order_id: orderId }).sort({ date: 1 }).lean();
+        return (0, pedido_parser_1.transformPedidos)(docs);
     }
-    async findManyByMongoIds(ids) {
-        const items = await pedido_model_1.PedidoModel.find({ _id: { $in: ids } }).lean();
-        return items.map(it => ({ ...it, value: it.value?.toString?.() ?? it.value }));
+    async findByPeriodo(dataInicio, dataFim) {
+        console.log("[REPO] convertendo datas:", dataInicio, dataFim);
+        const start = new Date(`${dataInicio}T00:00:00.000Z`);
+        const end = new Date(`${dataFim}T23:59:59.999Z`);
+        const docs = await this.model.find({ date: { $gte: start, $lte: end } }, {
+            user_id: 1,
+            order_id: 1,
+            product_id: 1,
+            value: 1,
+            date: 1,
+            name: 1
+        })
+            .sort({ date: -1 })
+            .limit(100)
+            .lean();
+        console.log("[REPOPOSITORY] encontrados:", docs.length);
+        const dados = await (0, pedido_parser_1.transformPedidos)(docs);
+        return dados;
     }
-    async findByUserId(userId, opts) {
-        const page = Math.max(1, opts?.page ?? 1);
-        const limit = Math.min(100, Math.max(1, opts?.limit ?? 20));
-        const sort = { date: (opts?.sort === "asc" ? 1 : -1), _id: 1 };
-        const filter = { user_id: userId };
-        const [items, total] = await Promise.all([
-            pedido_model_1.PedidoModel.find(filter).sort(sort).skip((page - 1) * limit).limit(limit).lean(),
-            pedido_model_1.PedidoModel.countDocuments(filter),
-        ]);
-        const norm = items.map(it => ({
-            ...it,
-            value: it.value?.toString?.() ?? it.value,
-        }));
-        return { total, page, limit, items: norm };
+    async findByPeriodo2(start, end) {
+        console.log("[REPO] convertendo datas:", start, end);
+        start = new Date(`${start}T00:00:00.000Z`);
+        end = new Date(`${end}T23:59:59.999Z`);
+        const docs = await this.model
+            .find({ date: { $gte: start, $lte: end } })
+            .sort({ date: 1 })
+            .lean();
+        const dado = await (0, pedido_parser_1.transformPedidos)(docs);
+        return dado;
     }
     async addMany(docs) {
         console.log("teste de salvar");
@@ -120,29 +114,6 @@ class PedidoRepository {
                 data: insertedDocs
             };
         }
-    }
-    async findByPeriodo({ dataInicio, dataFim, page, limit, order }) {
-        if (!isValidDate(dataInicio) || !isValidDate(dataFim)) {
-            const e = new Error("Datas inválidas recebidas no repositório.");
-            e.statusCode = 400;
-            throw e;
-        }
-        if (page < 1 || limit < 1) {
-            const e = new Error("Paginação inválida.");
-            e.statusCode = 400;
-            throw e;
-        }
-        const dateField = "data";
-        const filter = {
-            [dateField]: { $gte: dataInicio, $lte: dataFim },
-        };
-        const sort = [[dateField, order === "asc" ? 1 : -1]];
-        const skip = (page - 1) * limit;
-        const [data, total] = await Promise.all([
-            pedido_model_1.PedidoModel.find(filter).sort(sort).skip(skip).limit(limit).exec(),
-            pedido_model_1.PedidoModel.countDocuments(filter).exec(),
-        ]);
-        return { data, total };
     }
 }
 exports.PedidoRepository = PedidoRepository;

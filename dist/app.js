@@ -34,7 +34,7 @@ class App {
         this.app.use(express_1.default.json());
     }
     routes() {
-        this.app.use(["/pedido", "/pedidos"], pedido_routes_1.PedidoRoutes.getRouter());
+        this.app.use("/pedido", pedido_routes_1.PedidoRoutes.getRouter());
         this.app.use("/uploads", upload_routes_1.UploadRoutes.getRouter());
         this.app.use("/user", user_routes_1.UserRouter.getRouter());
     }
