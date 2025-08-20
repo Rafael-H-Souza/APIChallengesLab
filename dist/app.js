@@ -11,6 +11,10 @@ const body_parser_1 = __importDefault(require("body-parser"));
 const pedido_routes_1 = require("./routes/pedido.routes");
 const upload_routes_1 = require("./routes/upload.routes");
 const user_routes_1 = require("./routes/user.routes");
+// import fs from "fs";
+// import path from "path";
+// const swaggerPath = path.join(__dirname, "swagger", "swagger.json");
+// const swaggerSpec = JSON.parse(fs.readFileSync(swaggerPath, "utf-8"));
 class App {
     constructor() {
         this.app = (0, express_1.default)();

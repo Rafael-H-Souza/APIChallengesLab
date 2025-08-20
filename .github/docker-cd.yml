@@ -1,4 +1,5 @@
-name: CD (Docker Compose)
+name: CD 
+run-name: Pipeline de integração CD (Docker Compose)
 
 on:
   push:
@@ -50,58 +51,17 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
+          file: ./Dockerfile
           push: true
-          platforms: linux/amd64 
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache
-          cache-to: type=registry,ref=${{ env.IMAGE_NAME }}:buildcache,mode=max
+          tags: rafaelsouzaio/Devops-lab-logistica:latest
+      
+      - name: Azure Deploy
+        user: Azure/webapps-deploy@v3.0.1
+        with: 
+            app-name: lab-api-logistica-swagger
+            publish-profile: ${{secrets.PUBLISH_PROFILE}}
+            image: rafaelsouzaio/Devops-lab-logistica:latest
+            
+ 
 
-      - name: Pick SHA tag
-        id: sha_tag
-        run: |
-          T="$(echo '${{ steps.meta.outputs.tags }}' | tr ' ' '\n' | grep -E ':[0-9a-f]{7}$' | head -n1 | cut -d: -f2)"
-          echo "tag=${T:-latest}" >> "$GITHUB_OUTPUT"
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build-and-push
-    steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          script: |
-            set -euo pipefail
-            cd /apps/minha-api
-
-            IMAGE="${{ needs.build-and-push.outputs.image_name }}"
-            TAG="${{ needs.build-and-push.outputs.sha_tag }}"
-
-            echo "Deploying $IMAGE:$TAG"
-
-            # garante .env com IMAGE/TAG para o docker compose
-            touch .env
-            if grep -q '^IMAGE=' .env; then
-              sed -i "s|^IMAGE=.*$|IMAGE=$IMAGE|" .env
-            else
-              echo "IMAGE=$IMAGE" >> .env
-            fi
-            if grep -q '^TAG=' .env; then
-              sed -i "s|^TAG=.*$|TAG=$TAG|" .env
-            else
-              echo "TAG=$TAG" >> .env
-            fi
-
-            if [ -n "${{ secrets.DOCKER_USERNAME }}" ]; then
-              echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-            fi
-
-            # pull e sobe com compose v2
-            docker compose --env-file .env pull
-            docker compose --env-file .env up -d --remove-orphans
-
-            # limpeza básica
-            docker image prune -f
+      

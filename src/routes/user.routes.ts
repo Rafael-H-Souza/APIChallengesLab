@@ -14,19 +14,33 @@ export class UserRouter {
   }
 
   private initializeRoutes(): void {
-    this.router.post("/register", this.userController.register.bind(this.userController));
-    this.router.post("/login", this.userController.login.bind(this.userController));
-    this.router.put("/updatePassword",authenticateToken,this.userController.updatePassword.bind(this.userController));
-    this.router.get("/user", authenticateToken, this.userController.getUsers.bind(this.userController));
-    
 
-    this.router.get("/lista", authenticateToken, async (req: Request, res: Response, next: NextFunction): Promise<void> => {     
+      this.router.post("/register", async (req: Request, res: Response, next: NextFunction): Promise<void> => {     
         try{
-            await this.userController.getUsers(req, res )
+            await this.userController.register.bind(this.userController)
           } catch (error) {
             next(error); 
           }
-       });
+       });    
+    
+   
+    this.router.post("/login", async (req: Request, res: Response, next: NextFunction): Promise<void> => {     
+      try{
+          await this.userController.login.bind(this.userController)
+        } catch (error) {
+          next(error); 
+        }
+      });    
+  
+    
+
+    this.router.get("/lista", authenticateToken, async (req: Request, res: Response, next: NextFunction): Promise<void> => {     
+      try{
+          await this.userController.getUsers(req, res )
+        } catch (error) {
+          next(error); 
+        }
+      });
     
   }
 

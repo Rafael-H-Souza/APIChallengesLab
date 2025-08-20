@@ -7,6 +7,11 @@ import { PedidoRoutes } from "./routes/pedido.routes";
 import { UploadRoutes } from "./routes/upload.routes";
 import { UserRouter } from "./routes/user.routes";
 
+// import fs from "fs";
+// import path from "path";
+// const swaggerPath = path.join(__dirname, "swagger", "swagger.json");
+// const swaggerSpec = JSON.parse(fs.readFileSync(swaggerPath, "utf-8"));
+
 export class App {
   public app: Application;
 

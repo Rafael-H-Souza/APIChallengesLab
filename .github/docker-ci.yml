@@ -30,7 +30,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  
+          fetch-depth: 0
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -42,6 +42,12 @@ jobs:
 
       - name: Build images
         run: docker compose -f "$COMPOSE_FILE" build --pull
+
+      # <<< seu check de swagger vai AQUI, depois do build >>>
+      - name: Check swagger in dist
+        run: |
+          ls -la dist/swagger || true
+          test -f dist/swagger/swagger.json
 
       - name: Up (run tests) and wait
         run: |
@@ -77,27 +83,25 @@ jobs:
             echo "Container do serviço '$TEST_SERVICE' não encontrado; pulando extração de coverage."
           fi
 
-   
       - name: SonarQube Scan
-        if: always() 
+        if: always()
         uses: SonarSource/sonarqube-scan-action@v5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         with:
-          
           args: >
             -Dsonar.projectKey=Lab-api-Logistica-DevOpv
             -Dsonar.projectName=Lab-api-Logistica-DevOpv
             -Dsonar.projectVersion=1.0
-            -Dsonar.sources=.
-            -Dsonar.tests=.
+            -Dsonar.sources=src
+            -Dsonar.tests=src
             -Dsonar.test.inclusions=**/*.spec.ts,**/*.test.ts
             -Dsonar.javascript.lcov.reportPaths=artifacts/coverage/lcov.info
-            -Dsonar.coverage.exclusions=**/*.spec.ts,**/*.test.ts,**/tests/**
+            -Dsonar.coverage.exclusions=**/*.spec.ts,**/*.test.ts,**/tests/**,dist/**,node_modules/**
 
       - name: Quality Gate (optional)
-        if: always()
+        if: always() && github.event_name != 'pull_request'
         uses: SonarSource/sonarqube-quality-gate-action@v1.1.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
