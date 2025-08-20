@@ -52,3 +52,48 @@ export const parseLinesToPedidos = (lines: string[]): Partial<IPedido>[] =>
         p.value instanceof Types.Decimal128 &&
         p.date instanceof Date
     );
+
+  export const transformPedidos = (rawDocs: any[]) => {
+    const usersMap = new Map<number, any>();
+
+    for (const doc of rawDocs) {
+      const userId = doc.user_id;
+      const orderId = doc.order_id;
+      const date = new Date(doc.date).toISOString().slice(0, 10); // YYYY-MM-DD
+      const value = doc.value?.$numberDecimal ?? doc.value?.toString?.() ?? `${doc.value}`;
+
+      if (!usersMap.has(userId)) {
+        usersMap.set(userId, {
+          user_id: userId,
+          name: doc.name,
+          orders: []
+        });
+      }
+
+      const user = usersMap.get(userId);
+
+      // Procura se já existe esse pedido na lista de orders
+      let order = user.orders.find((o: any) => o.order_id === orderId && o.date === date);
+      if (!order) {
+        order = {
+          order_id: orderId,
+          date,
+          products: [],
+          total: "0.00"
+        };
+        user.orders.push(order);
+      }
+
+      // adiciona produto
+      order.products.push({
+        product_id: doc.product_id,
+        value
+      });
+
+      // soma total
+      const oldTotal = parseFloat(order.total);
+      order.total = (oldTotal + parseFloat(value)).toFixed(2);
+    }
+
+    return Array.from(usersMap.values());
+  }

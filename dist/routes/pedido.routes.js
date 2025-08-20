@@ -29,22 +29,8 @@ class PedidoRoutes {
                 return res.status(status).json({ message: err?.message ?? "Erro interno" });
             }
         });
-        this.router.get("/pedidos?limit=50", async (req, res, next) => {
-            try {
-                await this.controller.getAll(req, res);
-            }
-            catch (error) {
-                next(error);
-            }
-        });
-        this.router.get("/:id", async (req, res, next) => {
-            try {
-                const pedido = await this.controller.getById(req, res);
-                console.log("teste", pedido);
-            }
-            catch (error) {
-                next(error);
-            }
+        this.router.get("/:id", (req, res, next) => {
+            this.controller.getById(req, res).catch(next);
         });
     }
     static getRouter() {

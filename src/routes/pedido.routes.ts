@@ -22,8 +22,7 @@ export class PedidoRoutes{
   protected initializeRoutes(): void {
     //this.router.use(requestLogger);
 
-    this.router.get("/periodo", async (req: Request, res: Response) => {
-      
+    this.router.get("/periodo", async (req, res) => {
       const parsed = PeriodoQuerySchema.safeParse(req.query);
       if (!parsed.success) {
         return res.status(400).json({
@@ -41,23 +40,11 @@ export class PedidoRoutes{
       }
     });
 
-   this.router.get("/", async (req: Request, res: Response, next: NextFunction): Promise<void> => {     
-    try{
-        
-        await this.controller.getAll(req,res)
-      } catch (error) {
-        next(error); 
-      }
-   });
+  
+   this.router.get("/:id", (req, res, next) => {
+      this.controller.getById(req, res).catch(next);
+    });
 
-   this.router.get("/:id", async (req: Request, res: Response, next: NextFunction): Promise<void> => {     
-    try{
-      const pedido = await this.controller.getById(req,res)
-      console.log("teste",pedido)
-      } catch (error) {
-        next(error); 
-      }
-   });
     
   }
 

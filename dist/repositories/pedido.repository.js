@@ -37,27 +37,9 @@ class PedidoRepository {
             return { success: false, message: "Erro ao buscar pedidos.", error: error.message };
         }
     }
-    async findByOrderId(orderId, opts) {
-        const page = Math.max(1, opts?.page ?? 1);
-        const limit = Math.min(100, Math.max(1, opts?.limit ?? 20));
-        const sort = { date: (opts?.sort === "asc" ? 1 : -1), _id: 1 };
-        const filter = { order_id: orderId };
-        const [items, total] = await Promise.all([
-            pedido_model_1.PedidoModel.find(filter)
-                .sort(sort)
-                .skip((page - 1) * limit)
-                .limit(limit)
-                .lean(), // rápido, mas atenção ao Decimal128
-            pedido_model_1.PedidoModel.countDocuments(filter),
-        ]);
-        // Em .lean(), Decimal128 não passa pelo transform do schema:
-        const norm = items.map(it => ({
-            ...it,
-            value: it.value?.toString?.() ?? it.value,
-        }));
-        return { total, page, limit, items: norm };
+    async findByOrderId(orderId) {
+        return this.model.findOne({ order_id: orderId }).lean();
     }
-    // Se quiser por lista de Mongo _id:
     async findManyByMongoIds(ids) {
         const items = await pedido_model_1.PedidoModel.find({ _id: { $in: ids } }).lean();
         return items.map(it => ({ ...it, value: it.value?.toString?.() ?? it.value }));

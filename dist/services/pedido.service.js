@@ -57,8 +57,8 @@ class PedidoService {
     async addMany(pedidos) {
         return await this.repository.addMany(pedidos);
     }
-    async getAll(limit) {
-        return this.repository.findAll(limit);
+    async getByOrderId(orderId) {
+        return this.repository.findByOrderId(orderId);
     }
     async listarPorOrderId(orderId, page, limit, sort) {
         return this.repository.findByOrderId(orderId);

@@ -75,9 +75,10 @@ export class PedidoService {
   }
 
   
-  async getAll(limit?: number) {
-    return this.repository.findAll(limit);
+  async getByOrderId(orderId: number) {
+    return this.repository.findByOrderId(orderId);
   }
+
 
 
 

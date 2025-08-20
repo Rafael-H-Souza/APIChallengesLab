@@ -10,30 +10,16 @@ class PedidoController {
             const data = await this.service.create(req.body);
             res.status(201).json(data);
         };
-        this.getAll = async (req, res) => {
-            try {
-                const limit = Number(req.query.limit ?? 20);
-                const result = await this.service.getAll(limit);
-                res.json(result);
-            }
-            catch (error) {
-                res.status(500).json({ success: false, message: error.message });
-            }
-        };
         this.getById = async (req, res) => {
-            try {
-                const orderId = Number(req.params.orderId ?? req.query.orderId);
-                if (!Number.isFinite(orderId))
-                    return res.status(400).json({ message: "orderId inválido" });
-                const page = Number(req.query.page ?? 1);
-                const limit = Number(req.query.limit ?? 20);
-                const sort = (req.query.sort === "asc" ? "asc" : "desc");
-                const data = await this.service.listarPorOrderId(orderId, page, limit, sort);
-                return res.json(data);
+            const orderId = Number(req.params.id);
+            if (isNaN(orderId)) {
+                return res.status(400).json({ message: "order_id inválido, deve ser número" });
             }
-            catch (e) {
-                return res.status(500).json({ message: e.message });
+            const pedido = await this.service.getByOrderId(orderId);
+            if (!pedido) {
+                return res.status(404).json({ message: "Pedido não encontrado" });
             }
+            return res.json(pedido);
         };
     }
     async getByPeriodo(params) {

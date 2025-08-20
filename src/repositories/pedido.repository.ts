@@ -1,6 +1,7 @@
 import { Model, SortOrder, Types, Document } from "mongoose";
 import { IPedido } from "../interfaces/IPedido";
 import { PedidoModel } from "../models/pedido.model";
+import { transformPedidos } from "../utils/pedido.parser";
 
 type PedidoPlain = Omit<IPedido, keyof Document>;                
 type Insertable = Partial<PedidoPlain> & { _id: Types.ObjectId };
@@ -64,33 +65,12 @@ export class PedidoRepository {
     }
   }
 
-
-  async findByOrderId(orderId: number, opts?: { page?: number; limit?: number; sort?: "asc" | "desc" }) {
-    const page  = Math.max(1, opts?.page ?? 1);
-    const limit = Math.min(100, Math.max(1, opts?.limit ?? 20));
-    const sort  = { date: (opts?.sort === "asc" ? 1 : -1) as 1 | -1, _id: 1 as 1 };
-
-    const filter = { order_id: orderId };
-
-    const [items, total] = await Promise.all([
-      PedidoModel.find(filter)
-        .sort(sort)
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .lean(),               // rápido, mas atenção ao Decimal128
-      PedidoModel.countDocuments(filter),
-    ]);
-
-    // Em .lean(), Decimal128 não passa pelo transform do schema:
-    const norm = items.map(it => ({
-      ...it,
-      value: (it as any).value?.toString?.() ?? (it as any).value,
-    }));
-
-    return { total, page, limit, items: norm };
+  async findByOrderId(orderId: number) {
+    const docs = await this.model.find({ order_id: orderId }).sort({ date: 1 }).lean();
+    return transformPedidos(docs);
   }
 
-  // Se quiser por lista de Mongo _id:
+
   async findManyByMongoIds(ids: string[]) {
     const items = await PedidoModel.find({ _id: { $in: ids } }).lean();
     return items.map(it => ({ ...it, value: (it as any).value?.toString?.() ?? (it as any).value }));
