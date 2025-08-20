@@ -18,7 +18,7 @@ describe("Users API", () => {
 
     cy.request("POST", "/user/login", { email, password }).then((res) => {
       expect(res.status).to.eq(200);
-      expect(res.body).to.have.property("token").and.to.be.a("string");
+      expect(res.body).to.have.property("token").and.to.be.a("string"); 
       token = res.body.token;
     });
   });
