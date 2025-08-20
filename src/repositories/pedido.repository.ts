@@ -1,7 +1,6 @@
 import { Model, SortOrder, Types, Document } from "mongoose";
 import { IPedido } from "../interfaces/IPedido";
 import { PedidoModel } from "../models/pedido.model";
-import { PeriodoQuery } from "../validations/pedido.validation.schemas";
 
 type PedidoPlain = Omit<IPedido, keyof Document>;                
 type Insertable = Partial<PedidoPlain> & { _id: Types.ObjectId };
@@ -42,46 +41,86 @@ export class PedidoRepository {
     }
   }
 
-  async findAll() {
+
+  async findAll(limit = 20) {
     try {
-      const result = await this.model.find().lean();
-      return { success: true, message: "Pedidos encontrados com sucesso.", data: result };
+      const safeLimit = Math.min(100, Math.max(1, Number(limit)));
+
+      const docs = await this.model
+        .find({})
+        .sort({ date: 1, _id: 1 }) // ASC por data; _id para desempate
+        .limit(safeLimit)
+        .lean();
+
+      // Converter Decimal128 -> string quando usando .lean()
+      const data = docs.map((it: any) => ({
+        ...it,
+        value: it?.value?.toString?.() ?? it?.value,
+      }));
+
+      return { success: true, message: "Pedidos encontrados com sucesso.", data };
     } catch (error: any) {
       return { success: false, message: "Erro ao buscar pedidos.", error: error.message };
     }
   }
 
-  async findById(id: string) {
-    try {
-      const result = await this.model.findById(id).lean();
-      if (!result) return { success: false, message: `Pedido com id ${id} não encontrado.` };
-      return { success: true, message: "Pedido encontrado com sucesso.", data: result };
-    } catch (error: any) {
-      return { success: false, message: "Erro ao buscar pedido.", error: error.message };
-    }
+
+  async findByOrderId(orderId: number, opts?: { page?: number; limit?: number; sort?: "asc" | "desc" }) {
+    const page  = Math.max(1, opts?.page ?? 1);
+    const limit = Math.min(100, Math.max(1, opts?.limit ?? 20));
+    const sort  = { date: (opts?.sort === "asc" ? 1 : -1) as 1 | -1, _id: 1 as 1 };
+
+    const filter = { order_id: orderId };
+
+    const [items, total] = await Promise.all([
+      PedidoModel.find(filter)
+        .sort(sort)
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),               // rápido, mas atenção ao Decimal128
+      PedidoModel.countDocuments(filter),
+    ]);
+
+    // Em .lean(), Decimal128 não passa pelo transform do schema:
+    const norm = items.map(it => ({
+      ...it,
+      value: (it as any).value?.toString?.() ?? (it as any).value,
+    }));
+
+    return { total, page, limit, items: norm };
   }
 
-  async update(id: string, data: Partial<IPedido>) {
-    try {
-      const result = await this.model.findByIdAndUpdate(id, data, { new: true }).lean();
-      if (!result) return { success: false, message: `Pedido com id ${id} não encontrado para atualização.` };
-      return { success: true, message: "Pedido atualizado com sucesso.", data: result };
-    } catch (error: any) {
-      return { success: false, message: "Erro ao atualizar pedido.", error: error.message };
-    }
+  // Se quiser por lista de Mongo _id:
+  async findManyByMongoIds(ids: string[]) {
+    const items = await PedidoModel.find({ _id: { $in: ids } }).lean();
+    return items.map(it => ({ ...it, value: (it as any).value?.toString?.() ?? (it as any).value }));
   }
 
-  async delete(id: string) {
-    try {
-      const result = await this.model.findByIdAndDelete(id).lean();
-      if (!result) return { success: false, message: `Pedido com id ${id} não encontrado para exclusão.` };
-      return { success: true, message: "Pedido excluído com sucesso.", data: result };
-    } catch (error: any) {
-      return { success: false, message: "Erro ao excluir pedido.", error: error.message };
-    }
+ 
+  async findByUserId(userId: number, opts?: { page?: number; limit?: number; sort?: "asc" | "desc" }) {
+    const page  = Math.max(1, opts?.page ?? 1);
+    const limit = Math.min(100, Math.max(1, opts?.limit ?? 20));
+    const sort  = { date: (opts?.sort === "asc" ? 1 : -1) as 1 | -1, _id: 1 as 1 };
+
+    const filter = { user_id: userId };
+
+    const [items, total] = await Promise.all([
+      PedidoModel.find(filter).sort(sort).skip((page - 1) * limit).limit(limit).lean(),
+      PedidoModel.countDocuments(filter),
+    ]);
+
+    const norm = items.map(it => ({
+      ...it,
+      value: (it as any).value?.toString?.() ?? (it as any).value,
+    }));
+
+    return { total, page, limit, items: norm };
   }
+
+  
    
   async addMany(docs: Partial<IPedido>[]): Promise<AddManyResult> {
+    console.log("teste de salvar")
     if (!docs?.length) {
       return {
         success: true,

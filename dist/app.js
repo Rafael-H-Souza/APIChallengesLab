@@ -14,7 +14,7 @@ const user_routes_1 = require("./routes/user.routes");
 // import fs from "fs";
 // import path from "path";
 // const swaggerPath = path.join(__dirname, "swagger", "swagger.json");
-// const swaggerSpec = JSON.parse(fs.readFileSync(swaggerPath, "utf-8"));
+// const swaggerDocument = JSON.parse(fs.readFileSync(swaggerPath, "utf-8"));
 class App {
     constructor() {
         this.app = (0, express_1.default)();
@@ -34,8 +34,7 @@ class App {
         this.app.use(express_1.default.json());
     }
     routes() {
-        this.app.use("/pedido", pedido_routes_1.PedidoRoutes.getRouter());
-        this.app.use("/pedidos", pedido_routes_1.PedidoRoutes.getRouter());
+        this.app.use(["/pedido", "/pedidos"], pedido_routes_1.PedidoRoutes.getRouter());
         this.app.use("/uploads", upload_routes_1.UploadRoutes.getRouter());
         this.app.use("/user", user_routes_1.UserRouter.getRouter());
     }

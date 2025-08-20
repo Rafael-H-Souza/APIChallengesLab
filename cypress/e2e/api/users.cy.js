@@ -1,7 +1,6 @@
 describe("Users API", () => {
-  const password = "123456";
-  const email = `rafael+${Date.now()}@test.com`;
-  let token = "";
+  const password = "teste123";
+    let token = "";
 
 
   before(() => {
@@ -9,14 +8,14 @@ describe("Users API", () => {
     cy.request({
       method: "POST",
       url: "/user/register",
-      body: { name: "Rafael", email, password },
+      body: { username: "rafael", password: "teste123"},
       failOnStatusCode: false, 
     }).then((res) => {
       expect([201, 409]).to.include(res.status);
     });
 
-
-    cy.request("POST", "/user/login", { email, password }).then((res) => {
+  
+    cy.request("POST", "/user/login", { username, password }).then((res) => {
       expect(res.status).to.eq(200);
       expect(res.body).to.have.property("token").and.to.be.a("string"); 
       token = res.body.token;
@@ -27,7 +26,7 @@ describe("Users API", () => {
     cy.request({
       method: "POST",
       url: "/user/register",
-      body: { name: "Rafael", email: `rafael+again+${Date.now()}@test.com`, password },
+      body: { username: "Rafael", password },
       failOnStatusCode: false,
     }).then((res) => {
       expect([201, 409]).to.include(res.status);
@@ -35,7 +34,7 @@ describe("Users API", () => {
   });
 
   it("POST /user/login -> retorna token", () => {
-    cy.request("POST", "/user/login", { email, password }).then((res) => {
+    cy.request("POST", "/user/login", { username, password }).then((res) => {
       expect(res.status).to.eq(200);
       expect(res.body).to.have.property("token").and.to.be.a("string");
     });

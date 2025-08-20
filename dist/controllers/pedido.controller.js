@@ -10,36 +10,30 @@ class PedidoController {
             const data = await this.service.create(req.body);
             res.status(201).json(data);
         };
-        this.getAll = async (_req, res) => {
-            const data = await this.service.getAll();
-            res.json(data);
+        this.getAll = async (req, res) => {
+            try {
+                const limit = Number(req.query.limit ?? 20);
+                const result = await this.service.getAll(limit);
+                res.json(result);
+            }
+            catch (error) {
+                res.status(500).json({ success: false, message: error.message });
+            }
         };
         this.getById = async (req, res) => {
-            const id = req.params?.id;
-            if (!id)
-                return res.status(400).json({ message: "Parâmetro 'id' é obrigatório" });
-            const data = await this.service.getById(id);
-            if (!data)
-                return res.status(404).json({ message: "Pedido não encontrado" });
-            res.json(data);
-        };
-        this.update = async (req, res) => {
-            const id = req.params?.id;
-            if (!id)
-                return res.status(400).json({ message: "Parâmetro 'id' é obrigatório" });
-            const data = await this.service.update(id, req.body);
-            if (!data)
-                return res.status(404).json({ message: "Pedido não encontrado" });
-            res.json(data);
-        };
-        this.delete = async (req, res) => {
-            const id = req.params?.id;
-            if (!id)
-                return res.status(400).json({ message: "Parâmetro 'id' é obrigatório" });
-            const data = await this.service.delete(id);
-            if (!data)
-                return res.status(404).json({ message: "Pedido não encontrado" });
-            res.status(204).send();
+            try {
+                const orderId = Number(req.params.orderId ?? req.query.orderId);
+                if (!Number.isFinite(orderId))
+                    return res.status(400).json({ message: "orderId inválido" });
+                const page = Number(req.query.page ?? 1);
+                const limit = Number(req.query.limit ?? 20);
+                const sort = (req.query.sort === "asc" ? "asc" : "desc");
+                const data = await this.service.listarPorOrderId(orderId, page, limit, sort);
+                return res.json(data);
+            }
+            catch (e) {
+                return res.status(500).json({ message: e.message });
+            }
         };
     }
     async getByPeriodo(params) {

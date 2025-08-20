@@ -1,6 +1,28 @@
 version: "3.9"
 
 services:
+
+  db_lab_logistica:
+    image: mongo:latest
+    container_name: db_lab_logistica
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: rootLab
+      MONGO_INITDB_DATABASE: db_Homologacao
+    volumes:
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "mongodb://root:rootLab@localhost:27017/admin", "--eval", "db.runCommand({ ping: 1 }).ok" ]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+      start_period: 10s
+      
   api-lab_logistica:
     build:
       context: .
@@ -28,26 +50,7 @@ services:
       retries: 5
       start_period: 20s
 
-  db_lab_logistica:
-    image: mongo:latest
-    container_name: db_lab_logistica
-    restart: always
-    ports:
-      - "27017:27017"
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: rootLab
-      MONGO_INITDB_DATABASE: db_Homologacao
-    volumes:
-      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
-    networks:
-      - app-network
-    healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "mongodb://root:rootLab@localhost:27017/admin", "--eval", "db.runCommand({ ping: 1 }).ok" ]
-      interval: 10s
-      timeout: 5s
-      retries: 8
-      start_period: 10s
+  
 
 networks:
   app-network:

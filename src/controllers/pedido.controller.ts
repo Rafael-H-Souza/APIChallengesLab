@@ -10,34 +10,38 @@ export class PedidoController {
     res.status(201).json(data);
   };
 
-  getAll = async (_req: Request, res: Response) => {
-    const data = await this.service.getAll();
-    res.json(data);
+  getAll = async (req: Request, res: Response) => {
+    try {
+      const limit = Number(req.query.limit ?? 20);
+      const result = await this.service.getAll(limit);
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: error.message });
+    }
   };
+
+
+  
 
   getById = async (req: Request, res: Response) => {
-    const id = req.params?.id as string | undefined;
-    if (!id) return res.status(400).json({ message: "Parâmetro 'id' é obrigatório" });
-    const data = await this.service.getById(id);
-    if (!data) return res.status(404).json({ message: "Pedido não encontrado" });
-    res.json(data);
+    try {
+      const orderId = Number(req.params.orderId ?? req.query.orderId);
+      if (!Number.isFinite(orderId)) return res.status(400).json({ message: "orderId inválido" });
+
+      const page  = Number(req.query.page ?? 1);
+      const limit = Number(req.query.limit ?? 20);
+      const sort  = (req.query.sort === "asc" ? "asc" : "desc") as "asc" | "desc";
+
+      const data = await this.service.listarPorOrderId(orderId, page, limit, sort);
+      return res.json(data);
+    } catch (e: any) {
+      return res.status(500).json({ message: e.message });
+    }
   };
 
-  update = async (req: Request, res: Response) => {
-    const id = req.params?.id as string | undefined;
-    if (!id) return res.status(400).json({ message: "Parâmetro 'id' é obrigatório" });
-    const data = await this.service.update(id, req.body);
-    if (!data) return res.status(404).json({ message: "Pedido não encontrado" });
-    res.json(data);
-  };
 
-  delete = async (req: Request, res: Response) => {
-    const id = req.params?.id as string | undefined;
-    if (!id) return res.status(400).json({ message: "Parâmetro 'id' é obrigatório" });
-    const data = await this.service.delete(id);
-    if (!data) return res.status(404).json({ message: "Pedido não encontrado" });
-    res.status(204).send();
-  };
+
+
   async getByPeriodo(params: PeriodoQuery) {
     const parsed = PeriodoQuerySchema.safeParse(params);
     if (!parsed.success) {

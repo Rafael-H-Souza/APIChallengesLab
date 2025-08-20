@@ -61,7 +61,4 @@ jobs:
             app-name: lab-api-logistica-swagger
             publish-profile: ${{secrets.PUBLISH_PROFILE}}
             image: rafaelsouzaio/Devops-lab-logistica:latest
-            
- 
-
       

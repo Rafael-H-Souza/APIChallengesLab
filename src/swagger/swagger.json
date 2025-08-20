@@ -211,49 +211,6 @@
                     },
                     "404": { "description": "Pedido não encontrado" }
                 }
-            },
-            "put": {
-                "tags": ["Pedidos"],
-                "summary": "Atualizar pedido",
-                "security": [{ "BearerAuth": [] }],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": { "type": "string" }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": { "schema": { "$ref": "#/components/schemas/PedidoUpdate" } }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Pedido atualizado",
-                        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Pedido" } } }
-                    },
-                    "404": { "description": "Pedido não encontrado" }
-                }
-            },
-            "delete": {
-                "tags": ["Pedidos"],
-                "summary": "Remover pedido",
-                "security": [{ "BearerAuth": [] }],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": { "type": "string" }
-                    }
-                ],
-                "responses": {
-                    "200": { "description": "Pedido removido com sucesso" },
-                    "404": { "description": "Pedido não encontrado" }
-                }
             }
         },
         "/uploads/txt": {
@@ -321,51 +278,33 @@
             "Pedido": {
                 "type": "object",
                 "properties": {
-                    "id": { "type": "string" },
-                    "dataCompra": { "type": "string", "format": "date" }
-                },
-                "required": ["id", "dataCompra"]
-            },
-            "PedidoCreate": {
-                "type": "object",
-                "properties": {
-                    "id": { "type": "string" },
-                    "dataCompra": { "type": "string", "format": "date" }
-                },
-                "required": ["id", "dataCompra"]
-            },
-            "PedidoUpdate": {
-                "type": "object",
-                "properties": {
-                    "dataCompra": { "type": "string", "format": "date" }
-                }
-            },
-            "PedidoPage": {
-                "type": "object",
-                "properties": {
-                    "items": {
+                    "_id": { "type": "string", "description": "Identificador do pedido (ex.: ObjectId)" },
+                    "user_id": { "type": "integer", "description": "Código do usuário de origem do TXT" },
+                    "name": { "type": "string", "description": "Nome do usuário/cliente" },
+                    "order_id": { "type": "integer", "description": "Número do pedido" },
+                    "date": { "type": "string", "format": "date-time", "description": "Data/hora do pedido (ISO 8601)" },
+                    "total": { "type": "number", "description": "Valor total do pedido" },
+                    "products": {
                         "type": "array",
-                        "items": { "$ref": "#/components/schemas/Pedido" }
-                    },
-                    "total": { "type": "integer" },
-                    "page": { "type": "integer" },
-                    "limit": { "type": "integer" }
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                    "product_id": { "type": "integer" },
+                                    "value": { "type": "number" }
+                                }
+                        }
+                    }
                 }
             },
-            "UploadJobCreated": {
+            "User":{
                 "type": "object",
                 "properties": {
+                    "success": { "type": "boolean" },
                     "message": { "type": "string" },
-                    "data": { "type": "object" }
+                    "start": { "type": "string", "format": "date-time" },
+                    "end": { "type": "string", "format": "date-time" }
+                    
                 }
-            },
-            "Error": {
-                "type": "object",
-                "properties": { "message": { "type": "string" } }
-            },
-            "PedidoStatus": {
-                "type": "string",
-                "enum": ["ABERTO", "FECHADO", "CANCELADO"]
             }
         }
     }

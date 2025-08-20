@@ -10,7 +10,7 @@ import { UserRouter } from "./routes/user.routes";
 // import fs from "fs";
 // import path from "path";
 // const swaggerPath = path.join(__dirname, "swagger", "swagger.json");
-// const swaggerSpec = JSON.parse(fs.readFileSync(swaggerPath, "utf-8"));
+// const swaggerDocument = JSON.parse(fs.readFileSync(swaggerPath, "utf-8"));
 
 export class App {
   public app: Application;
@@ -37,8 +37,7 @@ export class App {
   }
 
   private routes(): void {
-    this.app.use("/pedido", PedidoRoutes.getRouter());
-    this.app.use("/pedidos", PedidoRoutes.getRouter());
+    this.app.use(["/pedido","/pedidos"], PedidoRoutes.getRouter());
     this.app.use("/uploads", UploadRoutes.getRouter());
     this.app.use("/user", UserRouter.getRouter());
   }

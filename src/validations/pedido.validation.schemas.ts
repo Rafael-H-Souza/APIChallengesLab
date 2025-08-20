@@ -5,7 +5,7 @@ export const DateISO = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use o formato YY
 export const PeriodoQuerySchema = z.object({
   dataInicio: DateISO,
   dataFim: DateISO,
-  page: z.coerce.number().int().positive().default(1),     // coerce converte string -> number
+  page: z.coerce.number().int().positive().default(1),   
   limit: z.coerce.number().int().positive().max(200).default(20),
   order: z.enum(["asc", "desc"]).default("desc"),
 });

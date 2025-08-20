@@ -1,5 +1,5 @@
 
-import { Route } from "./Route";
+import { Router } from "express";
 import { PedidoController } from "../controllers/pedido.controller";
 import { Request, Response, NextFunction } from "express";
 import { requestLogger } from "../middlewares/middleware.logging";
@@ -7,20 +7,24 @@ import { validateParams, validateBody, objectIdParam, pedidoCreateSchema, pedido
 
 import { PeriodoQuerySchema } from "../validations/pedido.validation.schemas";
 
-export class PedidoRoutes extends Route {
+export class PedidoRoutes{
+  
+  public router: Router;
   private controller: PedidoController;
 
-  constructor() {
-    super();
+  constructor() {    
+    
+    this.router = Router();
     this.controller = new PedidoController();
+    this.initializeRoutes()
   }
 
   protected initializeRoutes(): void {
-    this.router.use(requestLogger);
+    //this.router.use(requestLogger);
 
     this.router.get("/periodo", async (req: Request, res: Response) => {
-      console.log("teste")
-      const parsed = PeriodoQuerySchema.safeParse(req.query+"&page=1&limit=20&order=desc");
+      
+      const parsed = PeriodoQuerySchema.safeParse(req.query);
       if (!parsed.success) {
         return res.status(400).json({
           message: "Parâmetros inválidos",
@@ -37,52 +41,27 @@ export class PedidoRoutes extends Route {
       }
     });
 
-   this.get("/lista", async (req: Request, res: Response, next: NextFunction): Promise<void> => {     
+   this.router.get("/", async (req: Request, res: Response, next: NextFunction): Promise<void> => {     
     try{
-      
-        await this.wrap(this.controller.getAll)
+        
+        await this.controller.getAll(req,res)
       } catch (error) {
         next(error); 
       }
    });
 
-   
-  
-    this.get("/:id", validateParams(objectIdParam), this.wrap(this.controller.getById));
-
-    
-    this.post("/", validateBody(pedidoCreateSchema), this.wrap(this.controller.create));
-
-   
-    this.put("/:id",
-      validateParams(objectIdParam),
-      validateBody(pedidoUpdateSchema),
-      this.wrap(this.controller.update)
-    );
-
-
-    this.delete("/:id",
-      validateParams(objectIdParam),
-      this.wrap(this.controller.delete)
-    );
-  }
-
-  private wrap(handler: Function) {
-    return async (req: Request, res: Response, _next: NextFunction) => {
-      try {
-        await handler.call(this.controller, req, res);
-      } catch (error: any) {
-        console.error("Erro na rota", {
-          reqId: (req as any).reqId,
-          method: req.method,
-          url: req.originalUrl,
-          error: error?.message,
-          stack: error?.stack,
-        });
-        res.status(500).json({ message: "Erro interno no servidor", reqId: (req as any).reqId });
+   this.router.get("/:id", async (req: Request, res: Response, next: NextFunction): Promise<void> => {     
+    try{
+      const pedido = await this.controller.getById(req,res)
+      console.log("teste",pedido)
+      } catch (error) {
+        next(error); 
       }
-    };
+   });
+    
   }
+
+  
 
   public static getRouter(): import("express").Router {
     return new this().router;

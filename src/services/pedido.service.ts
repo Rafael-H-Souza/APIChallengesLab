@@ -20,6 +20,7 @@ export class PedidoService {
 
   async getByPeriodo(params: PeriodoQuery) {
     let { dataInicio, dataFim, page, limit, order } = params;
+    console.log("teste de busca de dados ")
 
     const inicio = new Date(dataInicio);
     const fim = new Date(dataFim);
@@ -73,20 +74,19 @@ export class PedidoService {
     return await this.repository.addMany(pedidos);
   }
 
-  async getAll() {
-    return await this.repository.findAll();
+  
+  async getAll(limit?: number) {
+    return this.repository.findAll(limit);
   }
 
-  async getById(id: string) {
-    return await this.repository.findById(id);
+
+
+  async listarPorOrderId(orderId: number, page?: number, limit?: number, sort?: "asc" | "desc") {
+    return this.repository.findByOrderId(orderId);
   }
 
-  async update(id: string, data: Partial<IPedido>) {
-    return await this.repository.update(id, data);
-  }
-
-  async delete(id: string) {
-    return await this.repository.delete(id);
+  async listarPorUserId(userId: number, page?: number, limit?: number, sort?: "asc" | "desc") {
+    return this.repository.findByUserId(userId);
   }
 }
                                

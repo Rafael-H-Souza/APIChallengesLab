@@ -14,6 +14,7 @@ class PedidoService {
     }
     async getByPeriodo(params) {
         let { dataInicio, dataFim, page, limit, order } = params;
+        console.log("teste de busca de dados ");
         const inicio = new Date(dataInicio);
         const fim = new Date(dataFim);
         if (!isValidDate(inicio) || !isValidDate(fim)) {
@@ -56,17 +57,14 @@ class PedidoService {
     async addMany(pedidos) {
         return await this.repository.addMany(pedidos);
     }
-    async getAll() {
-        return await this.repository.findAll();
+    async getAll(limit) {
+        return this.repository.findAll(limit);
     }
-    async getById(id) {
-        return await this.repository.findById(id);
+    async listarPorOrderId(orderId, page, limit, sort) {
+        return this.repository.findByOrderId(orderId);
     }
-    async update(id, data) {
-        return await this.repository.update(id, data);
-    }
-    async delete(id) {
-        return await this.repository.delete(id);
+    async listarPorUserId(userId, page, limit, sort) {
+        return this.repository.findByUserId(userId);
     }
 }
 exports.PedidoService = PedidoService;
